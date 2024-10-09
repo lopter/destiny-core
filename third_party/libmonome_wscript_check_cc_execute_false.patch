@@ -1,0 +1,31 @@
+diff --git a/wscript b/wscript
+index a83e22b..680c017 100644
+--- a/wscript
++++ b/wscript
+@@ -39,7 +39,7 @@ def check_poll(conf):
+ 			mandatory=False,
+ 			quote=0,
+ 
+-			execute=True,
++			execute=False,
+ 
+ 			fragment=code,
+ 
+@@ -52,7 +52,7 @@ def check_udev(conf):
+ 			mandatory=False,
+ 			quote=0,
+ 
+-			execute=True,
++			execute=False,
+ 
+ 			lib="udev",
+ 			uselib_store="UDEV",
+@@ -66,7 +66,7 @@ def check_liblo(conf):
+ 			mandatory=True,
+ 			quote=0,
+ 
+-			execute=True,
++			execute=False,
+ 
+ 			lib="lo",
+ 			uselib_store="LO",

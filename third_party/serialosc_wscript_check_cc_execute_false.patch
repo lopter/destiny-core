@@ -1,0 +1,22 @@
+diff --git a/wscript b/wscript
+index ed707f2..0e28cb5 100644
+--- a/wscript
++++ b/wscript
+@@ -39,7 +39,7 @@ def check_poll(conf):
+ 		mandatory=False,
+ 		quote=0,
+ 
+-		execute=True,
++		execute=False,
+ 
+ 		fragment=code,
+ 
+@@ -106,7 +106,7 @@ def check_strfuncs(ctx):
+ 			msg='Checking for {}'.format(func_name),
+ 			define_name='HAVE_{}'.format(func_name.upper()),
+ 			mandatory=False,
+-			execute=True,
++			execute=False,
+ 			fragment=check_strfunc_template.format(func_name))
+ 
+ 	check('strdup')
