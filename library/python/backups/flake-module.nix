@@ -2,7 +2,7 @@
   perSystem = { pkgs, ... }:
   let
     backups = with pkgs.python3Packages; buildPythonPackage {
-      pname = "multilab-backups";
+      pname = "backups";
       version = "0.0.1";
       src = ./.;
 

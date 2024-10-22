@@ -5,7 +5,8 @@
     flake-parts.url = "github:hercules-ci/flake-parts";
     flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs";
 
-    nixpkgs.url = "github:lopter/nixpkgs/nixos-unstable-lo-patches";
+    # nixpkgs.url = "github:lopter/nixpkgs/nixos-unstable-lo-patches";
+    nixpkgs.url = "/stash/home/kal/cu/src/nix/nixpkgs";
 
     nixpkgs-unfree.url = "github:numtide/nixpkgs-unfree";
     nixpkgs-unfree.inputs.nixpkgs.follows = "nixpkgs";
@@ -45,6 +46,7 @@
       imports = [
         inputs.devenv.flakeModule
 
+        ./library/python/acl_watcher/flake-module.nix
         ./library/python/backups/flake-module.nix
         ./library/python/toolbelt/flake-module.nix
 

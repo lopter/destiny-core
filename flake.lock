@@ -601,18 +601,16 @@
     },
     "nixpkgs_3": {
       "locked": {
-        "lastModified": 1726595257,
-        "narHash": "sha256-OTSSsRPbDfvqQF/hMeEj3FCMaAua9JzfPgg0GjlO5+Y=",
-        "owner": "lopter",
-        "repo": "nixpkgs",
-        "rev": "6570505eda1faa0ffe355f775b86954a8fb0b0ee",
-        "type": "github"
+        "dirtyRev": "73622f57f5b4e3123dc794ce9738fce0167ee114-dirty",
+        "dirtyShortRev": "73622f57f5b4-dirty",
+        "lastModified": 1727109555,
+        "narHash": "sha256-uMNfdq0FYGzqG81eabQSVYUC66aAi37SRBqOlxw4OHY=",
+        "type": "git",
+        "url": "file:///stash/home/kal/cu/src/nix/nixpkgs"
       },
       "original": {
-        "owner": "lopter",
-        "ref": "nixos-unstable-lo-patches",
-        "repo": "nixpkgs",
-        "type": "github"
+        "type": "git",
+        "url": "file:///stash/home/kal/cu/src/nix/nixpkgs"
       }
     },
     "poetry2nix": {
