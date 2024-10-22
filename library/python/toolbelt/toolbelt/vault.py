@@ -103,11 +103,11 @@ def rotate_ca_cert(
     items = [sops.KVPair("vaultTLSCACert", ca["cert"])]
     sops.upsert(Path("secrets/global.yaml"), items)
 
-    items = (
+    items = [
         sops.KVPair("vaultTLSCACSR", ca["csr"]),
         # TODO: insert that into pass instead:
         sops.KVPair("vaultTLSCAKey", ca["key"]),
-    )
+    ]
     sops.upsert(Path("secrets/vault.yaml"), items)
 
     logging.info(
@@ -462,7 +462,7 @@ def rotate_approle(
     sops.upsert(secrets_file_path, items)
 
     logging.info(f"Calling vault policy to create policy {vault_policy_name}")
-    cmd = ["vault", "policy", "write", vault_policy_name, vault_policy_path]
+    cmd = ["vault", "policy", "write", vault_policy_name, str(vault_policy_path)]
     vault_call(cmd)
 
     logging.info("All done")
