@@ -1,10 +1,11 @@
-{ lib
-, buildPythonPackage
-, certbot
-, fetchPypi
-, hvac
-, pyopenssl
-, zope_interface
+{
+  lib,
+  buildPythonPackage,
+  certbot,
+  fetchPypi,
+  hvac,
+  pyopenssl,
+  zope_interface,
 }:
 buildPythonPackage rec {
   pname = "certbot-vault";
@@ -19,7 +20,12 @@ buildPythonPackage rec {
     ./certbot-vault_minor_fixes_and_renew_deploy_implementation.patch
   ];
 
-  propagatedBuildInputs = [ certbot hvac pyopenssl zope_interface ];
+  propagatedBuildInputs = [
+    certbot
+    hvac
+    pyopenssl
+    zope_interface
+  ];
 
   meta = with lib; {
     homepage = "https://github.com/deathowl/certbot-vault-plugin";
@@ -28,4 +34,3 @@ buildPythonPackage rec {
     maintainers = with maintainers; [ ];
   };
 }
-

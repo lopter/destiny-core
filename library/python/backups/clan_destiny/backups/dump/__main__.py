@@ -4,7 +4,7 @@ import click
 from pathlib import Path
 from typing import cast
 
-from multilab.backups import config, dump, utils
+from clan_destiny.backups import config, dump, utils
 
 
 def _get_config(ctx: click.Context) -> config.Config:
@@ -16,7 +16,7 @@ def _get_config(ctx: click.Context) -> config.Config:
     "--config-path", "-c",
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
     help="Path to the configuration file that lists all backups.",
-    default=Path("/etc/multilab-backups.json"),
+    default=Path("/etc/clan-destiny-backups.json"),
     show_default=True,
     required=True,
 )

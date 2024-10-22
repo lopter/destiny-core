@@ -1,9 +1,10 @@
-{ lib
-, buildPythonPackage
-, certbot
-, fetchPypi
-, requests
-, zope_interface
+{
+  lib,
+  buildPythonPackage,
+  certbot,
+  fetchPypi,
+  requests,
+  zope_interface,
 }:
 buildPythonPackage rec {
   pname = "certbot-plugin-gandi";
@@ -14,7 +15,11 @@ buildPythonPackage rec {
     hash = "sha256-xiDkCi6oKCG/UB61QY9TtTnOLVyouQBavYyjmzqdIkA=";
   };
 
-  propagatedBuildInputs = [ certbot requests zope_interface ];
+  propagatedBuildInputs = [
+    certbot
+    requests
+    zope_interface
+  ];
 
   meta = with lib; {
     homepage = "https://github.com/obynio/certbot-plugin-gandi";

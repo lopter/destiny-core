@@ -1,8 +1,25 @@
-{ cmake, fetchFromGitHub, lib, libevent, stdenv }:
+{
+  cmake,
+  fetchFromGitHub,
+  lib,
+  libevent,
+  stdenv,
+}:
 let
-  mkLightsd = { pname, version, src, meta }:
+  mkLightsd =
+    {
+      pname,
+      version,
+      src,
+      meta,
+    }:
     stdenv.mkDerivation {
-      inherit pname version src meta;
+      inherit
+        pname
+        version
+        src
+        meta
+        ;
 
       nativeBuildInputs = [
         cmake
@@ -19,25 +36,25 @@ let
       ];
     };
 in
-  mkLightsd rec {
-    pname = "lightsd";
-    version = "1.2.1";
+mkLightsd rec {
+  pname = "lightsd";
+  version = "1.2.1";
 
-    src = fetchFromGitHub {
-      owner = "lopter";
-      repo = "lightsd";
-      rev = "${version}";
-      sha256 = "wCwV6RSwAsqxbTRii1c3SqVEzo8BZlmvyoxRpWP7n30=";
-    };
+  src = fetchFromGitHub {
+    owner = "lopter";
+    repo = "lightsd";
+    rev = "${version}";
+    sha256 = "wCwV6RSwAsqxbTRii1c3SqVEzo8BZlmvyoxRpWP7n30=";
+  };
 
-    meta = with lib; {
-      description = "A daemon to control smart bulbs";
-      longDescription = ''
-        lightsd acts a central point of control for your LIFX WiFi bulbs.
-        lightsd should be a small, simple and fast daemon exposing an easy
-        to use protocol inspired by how musicpd works.
-      '';
-      license = licenses.gpl3Plus;
-      homepage = "https://www.lightsd.io/";
-    };
-  }
+  meta = with lib; {
+    description = "A daemon to control smart bulbs";
+    longDescription = ''
+      lightsd acts a central point of control for your LIFX WiFi bulbs.
+      lightsd should be a small, simple and fast daemon exposing an easy
+      to use protocol inspired by how musicpd works.
+    '';
+    license = licenses.gpl3Plus;
+    homepage = "https://www.lightsd.io/";
+  };
+}

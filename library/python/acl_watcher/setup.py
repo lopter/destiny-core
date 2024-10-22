@@ -9,16 +9,12 @@ setuptools.setup(
     ),
     author="Louis Opter",
     author_email="louis@opter.org",
-    packages=setuptools.find_packages(exclude=['tests', 'tests.*']),
+    packages=setuptools.find_namespace_packages(),
     include_package_data=True,
     entry_points={
         "console_scripts": [
             "acl-watcher = acl_watcher.__main__:main",
-            "watchman-wait = acl_watcher.watchman_wait:main"
+            "watchman-wait = acl_watcher.watchman_wait:main",
         ],
     },
-    install_requires=[
-        "click",
-        "pywatchman",
-    ],
 )

@@ -1,8 +1,26 @@
-{ fetchFromGitHub, lib, liblo, python3, stdenv, wafHook }:
+{
+  fetchFromGitHub,
+  lib,
+  liblo,
+  python3,
+  stdenv,
+  wafHook,
+}:
 let
-  mkLibMonome = { pname, version, src, meta }:
+  mkLibMonome =
+    {
+      pname,
+      version,
+      src,
+      meta,
+    }:
     stdenv.mkDerivation {
-      inherit pname version src meta;
+      inherit
+        pname
+        version
+        src
+        meta
+        ;
 
       nativeBuildInputs = [
         wafHook
@@ -28,20 +46,20 @@ let
       enableParallelBuilding = true;
     };
 in
-  mkLibMonome rec {
-    pname = "libmonome";
-    version = "1.4.5";
+mkLibMonome rec {
+  pname = "libmonome";
+  version = "1.4.5";
 
-    src = fetchFromGitHub {
-      owner = "monome";
-      repo = "libmonome";
-      rev = "v${version}";
-      sha256 = "Kj5/+6gnqKfeClNh3gAcghJ6q9KpygbN32ulSf2Q7iw=";
-    };
+  src = fetchFromGitHub {
+    owner = "monome";
+    repo = "libmonome";
+    rev = "v${version}";
+    sha256 = "Kj5/+6gnqKfeClNh3gAcghJ6q9KpygbN32ulSf2Q7iw=";
+  };
 
-    meta = with lib; {
-      description = "A library for easy interaction with monome devices";
-      license = licenses.isc;
-      homepage = "https://github.com/monome/libmonome";
-    };
-  }
+  meta = with lib; {
+    description = "A library for easy interaction with monome devices";
+    license = licenses.isc;
+    homepage = "https://github.com/monome/libmonome";
+  };
+}

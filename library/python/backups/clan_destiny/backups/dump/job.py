@@ -12,7 +12,7 @@ from typing import (
     Union,
 )
 
-from multilab.backups import config
+from clan_destiny.backups import config
 from .rsync import RsyncCommands
 
 
@@ -165,7 +165,7 @@ class RsyncBackupJob(BackupJob):
 
 class ResticB2BackupJob(BackupJob):
 
-    TAGS = frozenset({"systemd_unit=multilab-backups.service"})
+    TAGS = frozenset({"systemd_unit=clan-destiny-backups.service"})
 
     def __init__(
         self,

@@ -739,7 +739,8 @@
         "nixpkgs": "nixpkgs_3",
         "nixpkgs-unfree": "nixpkgs-unfree",
         "rust-manifest": "rust-manifest",
-        "rust-manifest-nightly": "rust-manifest-nightly"
+        "rust-manifest-nightly": "rust-manifest-nightly",
+        "treefmt-nix": "treefmt-nix"
       }
     },
     "rust-manifest": {
@@ -808,6 +809,26 @@
       "original": {
         "owner": "nix-systems",
         "repo": "default",
+        "type": "github"
+      }
+    },
+    "treefmt-nix": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1729242555,
+        "narHash": "sha256-6jWSWxv2crIXmYSEb3LEVsFkCkyVHNllk61X4uhqfCs=",
+        "owner": "numtide",
+        "repo": "treefmt-nix",
+        "rev": "d986489c1c757f6921a48c1439f19bfb9b8ecab5",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "treefmt-nix",
         "type": "github"
       }
     }

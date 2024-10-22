@@ -9,10 +9,9 @@ import smtplib
 import socket
 import tempfile
 
-
 from pathlib import Path
 
-from multilab.backups import config, utils
+from clan_destiny.backups import config, utils
 from .job import BackupJob
 from .rsync import RsyncCommands
 
@@ -169,7 +168,7 @@ def generate_root_authorized_keys(
         # shlex.quote will use single quotes. The sshd manpage only tells us
         # that quotes can be escaped with a backslash:
         lines.append(
-            "restrict,command=\"multilab-backups-dump is_mounted {} && {}\" {}".format(
+            "restrict,command=\"clan_destiny-backups-dump is_mounted {} && {}\" {}".format(
                 shlex.quote(job_cfg.remote_path),
                 " ".join(
                     shlex.quote(arg)

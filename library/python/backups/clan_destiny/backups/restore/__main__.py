@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from multilab.backups import config, utils
+from clan_destiny.backups import config, utils
 
 
 @click.command(help="Restore the given backup on this host.")
@@ -15,7 +15,7 @@ from multilab.backups import config, utils
     "--config-path", "-c",
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
     help="Path to the configuration file that lists all backups.",
-    default=Path("/etc/multilab-backups.json"),
+    default=Path("/etc/clan-destiny-backups.json"),
     show_default=True,
     required=True,
 )
