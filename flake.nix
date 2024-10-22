@@ -41,7 +41,8 @@
     mk-shell-bin.url = "github:rrbutani/nix-mk-shell-bin";
     # Avoid the use of nix --impure, see https://github.com/cachix/devenv/pull/1018
     # but the UX is still not really there, e.g. you still need --impure to run
-    # something like `nix flake show`.
+    # something like `nix flake show`. I guess this approach bets on the fact
+    # that devenv is for interactive use.
     devenv-root.url = "file+file:///dev/null"; # this url is set/overriden from .envrc
     devenv-root.flake = false;
   };
@@ -53,11 +54,13 @@
         inputs.devenv.flakeModule
         inputs.treefmt-nix.flakeModule
 
+        ./library/bash/flake-module.nix
+
+        ./library/nix/flake-module.nix
+
         ./library/python/acl_watcher/flake-module.nix
         ./library/python/backups/flake-module.nix
         ./library/python/toolbelt/flake-module.nix
-
-        ./library/bash/flake-module.nix
       ];
       systems = [
         "x86_64-linux"
