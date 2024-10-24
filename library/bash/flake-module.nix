@@ -35,8 +35,6 @@
             new_args+=("$arg");
             [ "$arg" = "flake" ] && {
               local_inputs+=(
-                "--override-input" "multilab" "../multilab"
-                "--override-input" "multilab-config" "../multilab-config"
                 "--override-input" "destiny-core" "../destiny-core"
                 "--override-input" "destiny-config" "../destiny-config"
                 "--override-input" "clan-core" "../../src/nix/clan-core"
@@ -44,7 +42,7 @@
             };
           }; done
           new_args+=("''${local_inputs[@]}");
-          echo "--> nix" "''${new_args[@]}"
+          echo "nix" "''${new_args[@]}"
           exec nix "''${new_args[@]}"
         '';
       };
