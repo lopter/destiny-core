@@ -8,8 +8,8 @@ let
     , home ? "/var/empty"
     , description ? ""
     , shell ? "/bin/false"
-    , groups ? [ ]
-    }: "${k}:x:${toString uid}:${toString gid}:${description}:${home}:${shell}"
+    , ...
+    }@userCfg: "${k}:x:${toString uid}:${toString gid}:${description}:${home}:${shell}"
   );
   passwdContents = (
     lib.concatStringsSep "\n"
@@ -57,7 +57,7 @@ let
         mappings)
   );
 
-  groupToGroup = k: { gid }:
+  groupToGroup = k: { gid, ... }@groupCfg:
     let
       members = groupMemberMap.${k} or [ ];
     in
