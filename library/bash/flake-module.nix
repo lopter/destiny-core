@@ -46,5 +46,14 @@
           exec nix "''${new_args[@]}"
         '';
       };
+      packages.vault-shell = pkgs.writeShellScriptBin "vault-shell" ''
+        cleanup() {
+          shred -f ~/.vault-token
+          rm -vf ~/.vault-token
+        }
+        trap cleanup EXIT INT QUIT TERM
+        vault login
+        PS1="\n(vault) ${PS1:2}" $SHELL -i
+      '';
     };
 }
