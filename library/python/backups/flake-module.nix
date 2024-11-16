@@ -27,6 +27,10 @@
         };
     in
     {
+      apps.backups-dump.type = "app";
+      apps.backups-dump.program = "${backups}/bin/clan-destiny-backups-dump";
+      apps.backups-restore.type = "app";
+      apps.backups-restore.program = "${backups}/bin/clan-destiny-backups-restore";
       packages.backups = backups;
       devShells.backups = pkgs.mkShell {
         propagatedBuildInputs = with pkgs.python3Packages; [
