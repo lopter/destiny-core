@@ -1,5 +1,6 @@
 import asyncio
 import click
+import socket
 
 from pathlib import Path
 from typing import cast
@@ -33,7 +34,7 @@ def main(ctx: click.Context, config_path: Path) -> None:
 )
 @click.pass_context
 def generate_root_authorized_keys(ctx: click.Context) -> None:
-    host_aliases = (utils.getfqdn(),)
+    host_aliases = (socket.getfqdn(),)
     dump.generate_root_authorized_keys(_get_config(ctx), host_aliases)
 
 
@@ -51,7 +52,7 @@ def is_mounted(ctx: click.Context, path) -> None:
 @click.argument("job_name")
 @click.pass_context
 def setup_debug_script(ctx: click.Context, job_name: str) -> None:
-    path = dump.setup_debug_script(_get_config(ctx), job_name, utils.getfqdn())
+    path = dump.setup_debug_script(_get_config(ctx), job_name, socket.getfqdn())
     click.echo(f"A manual backup script has been written to {path}.\n")
     click.echo(f"Do not forget to delete this directory once you are done.")
 
@@ -59,7 +60,7 @@ def setup_debug_script(ctx: click.Context, job_name: str) -> None:
 @main.command(help="Dump all backups defined for this host.")
 @click.pass_context
 def run(ctx: click.Context) -> None:
-    dump.run(_get_config(ctx), utils.getfqdn())
+    dump.run(_get_config(ctx), socket.getfqdn())
 
 
 main()

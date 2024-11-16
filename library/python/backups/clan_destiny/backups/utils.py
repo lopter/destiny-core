@@ -4,7 +4,6 @@ import contextlib
 import json
 import os
 import shutil
-import socket
 import subprocess
 import tempfile
 
@@ -13,23 +12,6 @@ from typing import (
     Generator,
     Optional,
 )
-
-
-def getfqdn():
-    """A version of ``socket.getfqdn`` modeled after ``hostname -f``.
-
-    It turns out that ``_getfqdn`` does not work on NixOS (it returns
-    "localhost") due to how NixOS sets ``/etc/hosts`` and how
-    ``_getfqdn`` is implemented in Python.
-
-    This version of ``getfqdn`` is borrowed from the implementation of
-    ``hostname -f`` which works as intended.
-    """
-    hostname = socket.gethostname()
-    type = socket.SOCK_DGRAM
-    flags = socket.AI_CANONNAME
-    res = socket.getaddrinfo(hostname, port=0, type=type, flags=flags)
-    return res[0][3]
 
 
 async def is_mounted(filepath: Path) -> bool:
