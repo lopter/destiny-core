@@ -18,15 +18,15 @@
     fenix.inputs.nixpkgs.follows = "nixpkgs";
     fenix.inputs.rust-analyzer-src.follows = "";
     rust-manifest = {
-      # Rust 1.77.2
+      # Rust 1.83.0
       type = "file";
-      url = "https://static.rust-lang.org/dist/2024-04-09/channel-rust-stable.toml";
+      url = "https://static.rust-lang.org/dist/2024-11-28/channel-rust-stable.toml";
       flake = false;
     };
     rust-manifest-nightly = {
-      # Rust 1.82.0-nightly
+      # Rust 1.85.0-nightly
       type = "file";
-      url = "https://static.rust-lang.org/dist/2024-07-27/channel-rust-nightly.toml";
+      url = "https://static.rust-lang.org/dist/2024-12-02/channel-rust-nightly.toml";
       flake = false;
     };
     crane.url = "github:ipetkov/crane";
@@ -34,7 +34,7 @@
     advisory-db.flake = false;
 
     # devenv inputs:
-    devenv.url = "github:cachix/devenv/v1.3";
+    devenv.url = "github:cachix/devenv";
     devenv.inputs.nixpkgs.follows = "nixpkgs";
     nix2container.url = "github:nlewo/nix2container";
     nix2container.inputs.nixpkgs.follows = "nixpkgs";
@@ -61,6 +61,8 @@
         ./library/python/acl_watcher/flake-module.nix
         ./library/python/backups/flake-module.nix
         ./library/python/toolbelt/flake-module.nix
+
+        ./library/rust/blogon/flake-module.nix
       ];
       systems = [
         "x86_64-linux"
@@ -137,9 +139,9 @@
                 #
                 # I cargo-culted this from the crane template for trunk.
                 wasm-bindgen-cli = pkgs.wasm-bindgen-cli.override {
-                  version = "0.2.93";
-                  hash = "sha256-DDdu5mM3gneraM85pAepBXWn3TMofarVR4NbjMdz3r0=";
-                  cargoHash = "sha256-birrg+XABBHHKJxfTKAMSlmTVYLmnmqMDfRnmG6g/YQ=";
+                  version = "0.2.95";
+                  hash = "";
+                  cargoHash = "";
                 };
               }
             );
@@ -216,6 +218,7 @@
               };
             programs.ruff.check = true;
             programs.ruff.format = true;
+            programs.rustfmt.enable = true;
           };
         };
     };
