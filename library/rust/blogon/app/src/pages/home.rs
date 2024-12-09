@@ -1,13 +1,20 @@
 use leptos::prelude::*;
+use leptos_router::components::A;
 
 #[component]
 pub fn Index() -> impl IntoView {
-    // Creates a reactive value to update the button
-    let count = RwSignal::new(0);
-    let on_click = move |_| *count.write() += 1;
-
     view! {
-        <h1>"Welcome to Leptos!"</h1>
-        <button on:click=on_click>"Click Me: " {count}</button>
+        <main class="home">
+            <nav>
+                <ul>
+                    <li><A href="/blog">Blog</A></li>
+                    // Find images for those instead:
+                    <li>GitHub</li>
+                    <li>LinkedIn</li>
+                    <li>Bluesky</li>
+                    <li>Twitter</li>
+                </ul>
+            </nav>
+        </main>
     }
 }

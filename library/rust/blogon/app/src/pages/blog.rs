@@ -4,6 +4,7 @@ use leptos_router::components::A;
 use std::path::PathBuf;
 
 use crate::store;
+use crate::components::NavBar;
 
 #[component]
 pub fn Index() -> impl IntoView {
@@ -31,6 +32,8 @@ pub fn Index() -> impl IntoView {
     */
 
     view! {
+        <NavBar />
+        <main class="blog-index">
         <nav>
         {move || match index.get() {
             None => leptos::either::EitherOf3::A(view! { "Loading…" }.into_view()),
@@ -40,9 +43,18 @@ pub fn Index() -> impl IntoView {
                 {list
                     .into_iter()
                     .map(|item| {
-                        let url = format!("/blog/{}", item.slug);
-                        let name = item.metadata.title.clone();
-                        view! { <li><A href={ url }>{ name }</A></li> }
+                        let date = item.metadata.date.as_ref().map_or(
+                            String::from("Unpublished"),
+                            |dt| dt.format("%Y-%m-%d").to_string(),
+                        );
+                        view! {
+                            <PostDetails
+                                slug={ item.slug.clone() }
+                                title={ item.metadata.title.clone() }
+                                date={ date }
+                                tags={ item.metadata.tags.clone() }
+                            />
+                        }
                     })
                     .collect_view()}
             </ul>
@@ -73,6 +85,26 @@ pub fn Index() -> impl IntoView {
         </Transition>
     */
         </nav>
+        </main>
+    }
+}
+
+#[component]
+pub fn PostDetails(slug: String, title: String, date: String, tags: Vec<String>) -> impl IntoView {
+    view! {
+        <li>
+            { format!("{}: ", date) }<A href={ format!("/blog/{}", slug) }>{ title }</A>
+            <div class="tags-list">
+                <span>"Tags:"</span>
+                <ul>
+                {
+                    tags.into_iter()
+                        .map(|tag| view! { <li>{ tag }</li> })
+                        .collect_view()
+                }
+                </ul>
+            </div>
+        </li>
     }
 }
 
@@ -100,16 +132,20 @@ pub fn Post() -> impl IntoView {
     );
 
     view! {
+        <NavBar />
+        <main class="blog-post">
         {move || match post.get() {
             None => leptos::either::EitherOf3::A(view! { <p>{"Loading…"}</p> }.into_view()),
             // setup some nav with the ToC
             Some(Ok(post)) => leptos::either::EitherOf3::B(view! {
+                <h1>{ post.front_matter.metadata.title }</h1>
                 <article inner_html=post.html_body></article>
             }.into_view()),
             Some(Err(err)) => leptos::either::EitherOf3::C(view! {
                 <p>{format!("Could not load index: {}", err.to_string())}</p>
             }.into_view()),
         }}
+        </main>
     }
 }
 

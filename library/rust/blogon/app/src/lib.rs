@@ -1,5 +1,6 @@
-pub mod pages;
+pub mod components;
 pub mod store;
+pub mod pages;
 
 use leptos::prelude::*;
 use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
@@ -43,30 +44,28 @@ pub fn App() -> impl IntoView {
 
         // content for this welcome page
         <Router>
-            <main>
-                <Routes fallback=|| "Page not found.".into_view()>
-                    // Let's use async rendering so that we fully render on the server since this
-                    // is really static content. However, this will suck if we ever add comments,
-                    // since we'll want to actually load those asynchronously.
-                    // My understanding is that SsrMode::PartiallyBlocked & Resource::new_blocking
-                    // should address that, but it does not seem to work.
-                    <Route
-                        path=StaticSegment("")
-                        view=pages::home::Index
-                        ssr=SsrMode::Async
-                    />
-                    <Route
-                        path=StaticSegment("blog")
-                        view=pages::blog::Index
-                        ssr=SsrMode::PartiallyBlocked
-                    />
-                    <Route
-                        path=(StaticSegment("blog"), ParamSegment("slug"))
-                        view=pages::blog::Post
-                        ssr=SsrMode::PartiallyBlocked
-                    />
-                </Routes>
-            </main>
+            <Routes fallback=|| "Page not found.".into_view()>
+                // Let's use async rendering so that we fully render on the server since this
+                // is really static content. However, this will suck if we ever add comments,
+                // since we'll want to actually load those asynchronously.
+                // My understanding is that SsrMode::PartiallyBlocked & Resource::new_blocking
+                // should address that, but it does not seem to work.
+                <Route
+                    path=StaticSegment("")
+                    view=pages::home::Index
+                    ssr=SsrMode::Async
+                />
+                <Route
+                    path=StaticSegment("blog")
+                    view=pages::blog::Index
+                    ssr=SsrMode::PartiallyBlocked
+                />
+                <Route
+                    path=(StaticSegment("blog"), ParamSegment("slug"))
+                    view=pages::blog::Post
+                    ssr=SsrMode::PartiallyBlocked
+                />
+            </Routes>
         </Router>
     }
 }
