@@ -1,6 +1,6 @@
 pub mod components;
-pub mod store;
 pub mod pages;
+pub mod store;
 
 use leptos::prelude::*;
 use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};

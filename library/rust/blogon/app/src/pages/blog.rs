@@ -3,8 +3,8 @@ use leptos::prelude::*;
 use leptos_router::components::A;
 use std::path::PathBuf;
 
-use crate::store;
 use crate::components::NavBar;
+use crate::store;
 
 #[component]
 pub fn Index() -> impl IntoView {

@@ -57,48 +57,61 @@
       '';
 
       # Useful in the installer when nixos-enter is not cutting it:
-      packages.chroot-enter = with pkgs; writeShellApplication {
-        name = "chroot-enter";
-        text = ''
-          #!${lib.getExe' bash "sh"} -x
+      packages.chroot-enter =
+        with pkgs;
+        writeShellApplication {
+          name = "chroot-enter";
+          text = ''
+            #!${lib.getExe' bash "sh"} -x
 
-          target="''${1:-"/mnt"}"
-          mount --bind /proc "$target/proc"
-          mount --bind /sys "$target/sys"
-          mount --bind /dev "$target/dev"
-          mount --bind /dev/pts "$target/dev/pts"
-          mount --bind /run "$target/run"
-          chroot /mnt /bin/sh
-        '';
-        runtimeInputs = [ bash coreutils util-linux ];
-      };
+            target="''${1:-"/mnt"}"
+            mount --bind /proc "$target/proc"
+            mount --bind /sys "$target/sys"
+            mount --bind /dev "$target/dev"
+            mount --bind /dev/pts "$target/dev/pts"
+            mount --bind /run "$target/run"
+            chroot /mnt /bin/sh
+          '';
+          runtimeInputs = [
+            bash
+            coreutils
+            util-linux
+          ];
+        };
 
       # Useful in the installer to mount filesystems for a specific nixos configuration:
-      packages.mount-mnt = with pkgs; writeShellApplication {
-        name = "mount-mnt";
-        text = ''
-          #!${lib.getExe' bash "sh"}
+      packages.mount-mnt =
+        with pkgs;
+        writeShellApplication {
+          name = "mount-mnt";
+          text = ''
+            #!${lib.getExe' bash "sh"}
 
-          [ $# -eq 2 ] || {
-            printf >&2 "Usage: %s flake_path hostname\n" "$(basename "$0")"
-            exit 1;
-          }
+            [ $# -eq 2 ] || {
+              printf >&2 "Usage: %s flake_path hostname\n" "$(basename "$0")"
+              exit 1;
+            }
 
-          flake_path="$1"
-          hostname="$2"
+            flake_path="$1"
+            hostname="$2"
 
-          pvscan
-          vgchange -a y
+            pvscan
+            vgchange -a y
 
-          nix eval --json "''${flake_path}#nixosConfigurations.''${hostname}.config.fileSystems" \
-            | jq -r '
-              to_entries
-                  | map("mount -o \(.value.options | join(",")) \(.value.device) /mnt\(.key)")
-                  | .[]
-            ' \
-            | ${lib.getExe' bash "sh"} -x
-        '';
-        runtimeInputs = [ bash jq nix lvm2 ];
-      };
+            nix eval --json "''${flake_path}#nixosConfigurations.''${hostname}.config.fileSystems" \
+              | jq -r '
+                to_entries
+                    | map("mount -o \(.value.options | join(",")) \(.value.device) /mnt\(.key)")
+                    | .[]
+              ' \
+              | ${lib.getExe' bash "sh"} -x
+          '';
+          runtimeInputs = [
+            bash
+            jq
+            nix
+            lvm2
+          ];
+        };
     };
 }
