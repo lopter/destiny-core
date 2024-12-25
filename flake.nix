@@ -139,7 +139,7 @@
                 #
                 # I cargo-culted this from the crane template for trunk.
                 wasm-bindgen-cli = pkgs.wasm-bindgen-cli.override {
-                  version = "0.2.95";
+                  version = "0.2.99";
                   hash = "";
                   cargoHash = "";
                 };
