@@ -23,7 +23,9 @@
           cfssl
           sops
 
-          inputs'.nixpkgs-unfree.legacyPackages.vault
+          (inputs'.nixpkgs-unfree.legacyPackages.vault.overrideAttrs (_prev: {
+            doCheck = false;
+          }))
         ];
       };
     };
