@@ -6,7 +6,7 @@ pub fn NavBar() -> impl IntoView {
     view! {
         <nav>
             <ul>
-                <li><A href="/">Root</A></li>
+                <li><A href="/">Louis x Kalessin</A></li>
                 <li><A href="/blog">Blog</A></li>
             </ul>
         </nav>

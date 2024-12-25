@@ -204,10 +204,11 @@ fn add_section_ids<'input>(events: Vec<Event<'input>>, toc: &Vec<Heading>) -> Ve
             Event::End(TagEnd::Heading(_)) => {
                 let heading = &toc[heading_idx];
                 heading_idx += 1;
+                let html_id = heading.html_id();
                 events_with_ids.push(Event::Text(CowStr::from(" ")));
                 events_with_ids.push(Event::Html(CowStr::from(format!(
-                    "<a href=\"#{}\"><span class=\"heading-anchor\">#</span></a>",
-                    heading.html_id(),
+                    "<a href=\"#{}\" id=\"{}\"><span class=\"heading-anchor\">#</span></a>",
+                    html_id, html_id,
                 ))));
             }
             _ => (),

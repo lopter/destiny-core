@@ -32,8 +32,10 @@ pub fn Index() -> impl IntoView {
     */
 
     view! {
+        <div class="body-inner">
         <NavBar />
         <main class="blog-index">
+        <h1>Index</h1>
         <nav>
         {move || match index.get() {
             None => leptos::either::EitherOf3::A(view! { "Loading…" }.into_view()),
@@ -86,6 +88,7 @@ pub fn Index() -> impl IntoView {
     */
         </nav>
         </main>
+        </div>
     }
 }
 
@@ -99,7 +102,7 @@ pub fn PostDetails(slug: String, title: String, date: String, tags: Vec<String>)
                 <ul>
                 {
                     tags.into_iter()
-                        .map(|tag| view! { <li>{ tag }</li> })
+                        .map(|tag| view! { <li><span class="tag">{ tag }</span></li> })
                         .collect_view()
                 }
                 </ul>
@@ -132,6 +135,7 @@ pub fn Post() -> impl IntoView {
     );
 
     view! {
+        <div class="body-inner">
         <NavBar />
         <main class="blog-post">
         {move || match post.get() {
@@ -146,6 +150,7 @@ pub fn Post() -> impl IntoView {
             }.into_view()),
         }}
         </main>
+        </div>
     }
 }
 
