@@ -3,7 +3,7 @@ import functools
 import json
 import logging
 import os
-import pexpect
+import pexpect  # type: ignore
 import subprocess
 import sys
 import tempfile
@@ -11,7 +11,7 @@ import tempfile
 from pathlib import Path
 from typing import Any, Optional
 
-from . import sops
+from . import clan, pass_store
 from .main import main
 
 
@@ -22,17 +22,15 @@ def vault() -> None:
 
 @vault.command(
     name="rotate-ca-cert",
-    help="""Upsert a CA cert for vault into the secrets directory.
+    help="""Set a new CA cert for vault into the clan vars of the given machine.
 
-The CA is created using cfssl, the following keys are set in their respective
-sops files:
+The CA is created using cfssl, the following clan vars are set for the given
+machine and vars generator:
 
-- vaultTLSCACert in secrets/global.yaml
-- vaultTLSCAKey in secrets/vault.yaml
-- vaultTLSCACSR in secrets/vault.yaml
+- clan-destiny-vault-common/tlsCaCert
 
-Because sops cannot set multiple values in a single operation you may be
-prompted for credentials three times.
+While the secret `tls_ca_key` is set in pass in the directory given by
+`--pass-dir`.
 
 Note that Vault can take a certificate chain in its `tls_cert_file` listener
 setting.
@@ -52,6 +50,18 @@ setting.
     required=True,
 )
 @click.option("--algo", default="ed25519", show_default=True, required=True)
+@click.option(
+    "--machine",
+    help="The clan machine to use with `clan vars set`",
+    required=True,
+)
+@click.option(
+    "--pass-dir",
+    default="io/lightsd/pki/vault",
+    required=True,
+    show_default=True,
+)
+@clan.ensure_root_directory
 def rotate_ca_cert(
     common_name: str,
     country: Optional[str],
@@ -61,33 +71,29 @@ def rotate_ca_cert(
     organizational_unit: Optional[str],
     expiry: str,
     algo: str,
+    machine: str,
+    pass_dir: str,
 ) -> None:
-    if not Path(".sops.yaml").is_file():
-        logging.error(
-            "Sops config (`.sops.yaml`) not found.\n\nThis tool is meant "
-            "to be called from the root of your config repository."
-        )
-        sys.exit(1)
-
     def clean_attrs(d):
         return {k: v for k, v in d.items() if v is not None}
+
     csr: dict[str, Any] = {
         "CN": common_name,
         "names": [
-            clean_attrs({
-                "C":  country,
-                "L":  location,
-                "O":  organization,
-                "OU": organizational_unit,
-                "ST": state,
-            }),
+            clean_attrs(
+                {
+                    "C": country,
+                    "L": location,
+                    "O": organization,
+                    "OU": organizational_unit,
+                    "ST": state,
+                }
+            ),
         ],
         "key": {
             "algo": algo,
         },
-        "ca": {
-            "expiry": expiry
-        },
+        "ca": {"expiry": expiry},
     }
 
     logging.info("Calling cfssl to generate a CA")
@@ -100,37 +106,31 @@ def rotate_ca_cert(
     )
     ca = json.loads(genkey.stdout)
 
-    items = [sops.KVPair("vaultTLSCACert", ca["cert"])]
-    sops.upsert(Path("secrets/global.yaml"), items)
+    clan.vars_set(machine, {"clan-destiny-vault-common/tlsCaCert": ca["cert"]})
 
-    items = [
-        sops.KVPair("vaultTLSCACSR", ca["csr"]),
-        # TODO: insert that into pass instead:
-        sops.KVPair("vaultTLSCAKey", ca["key"]),
-    ]
-    sops.upsert(Path("secrets/vault.yaml"), items)
+    name = "tls_ca_key"
+    dest = os.path.join(pass_dir, name)
+    logging.info(f"Saving TLS CA key in pass with name {dest}")
+    pass_store.set(dest, ca["key"])
 
     logging.info(
         "Successfully rotated Vault CA Cert, "
-        "please call vault `vault_rotate_server_cert` next"
+        "please call `vault rotate-server-cert` next"
     )
 
 
 @vault.command(
     name="rotate-server-cert",
-    help="""Upsert a server cert into the `secrets/vault.yaml` SOPS file.
+    help="""Set a new server cert into the clan vars of the given machine.
 
-The Vault CA saved in `secrets/global.yaml` is used to issue the server
-certificate.
+The given vars are set:
 
-This (entirely) rewrites `secrets/vault.yaml` with the following key:
+- clan-destiny-vault/tlsCertChain
+- clan-destiny-vault/tlsKey
 
-- vaultTLSCert
-- vaultTLSKey
-- vaultTLSCSR
-
-Note that Vault can take a certificate chain in its `tls_cert_file` listener
-setting.
+The TLS CA cert is read from `clan-destiny-vault-common/tlsCaCert` while the
+TLS CA key is read from the secret `tls_ca_key` in the directory given by
+`--pass-dir`.
 """,
 )
 @click.option("--common-name", required=True)
@@ -147,6 +147,14 @@ setting.
     required=True,
 )
 @click.option("--algo", default="ed25519", show_default=True, required=True)
+@click.option("--machine", required=True)
+@click.option(
+    "--pass-dir",
+    default="io/lightsd/pki/vault",
+    required=True,
+    show_default=True,
+)
+@clan.ensure_root_directory
 def rotate_server_cert(
     common_name: str,
     country: Optional[str],
@@ -156,16 +164,12 @@ def rotate_server_cert(
     organizational_unit: Optional[str],
     expiry: str,
     algo: str,
+    machine: str,
+    pass_dir: str,
 ) -> None:
-    if not Path(".sops.yaml").is_file():
-        logging.error(
-            "Sops config (`.sops.yaml`) not found.\n\nThis tool is meant "
-            "to be called from the root of your config repository."
-        )
-        sys.exit(1)
-
-    ca_cert = sops.get(Path("secrets/global.yaml"), "vaultTLSCACert")
-    ca_key = sops.get(Path("secrets/vault.yaml"), "vaultTLSCAKey")
+    name = "clan-destiny-vault-common/tlsCaCert"
+    ca_cert = clan.vars_get(machine, [name])[name]
+    ca_key = pass_store.show(os.path.join(pass_dir, "tls_ca_key"))
 
     cert_profile_name = "vault-server"
     cfssl_config = {
@@ -178,27 +182,30 @@ def rotate_server_cert(
                         "digital signature",
                         "key encipherment",
                         "server auth",
-                    ]
+                    ],
                 },
-            }
+            },
         }
     }
 
     def clean_attrs(d):
         return {k: v for k, v in d.items() if v is not None}
+
     csr: dict[str, Any] = {
         "CN": common_name,
         "hosts": [
             common_name,
         ],
         "names": [
-            clean_attrs({
-                "C":  country,
-                "L":  location,
-                "O":  organization,
-                "OU": organizational_unit,
-                "ST": state,
-            }),
+            clean_attrs(
+                {
+                    "C": country,
+                    "L": location,
+                    "O": organization,
+                    "OU": organizational_unit,
+                    "ST": state,
+                }
+            ),
         ],
         "key": {
             "algo": algo,
@@ -207,7 +214,7 @@ def rotate_server_cert(
         },
     }
 
-    tmp_dir = tempfile.TemporaryDirectory(suffix="multilab-toolbelt")
+    tmp_dir = tempfile.TemporaryDirectory(suffix="clan-destiny-toolbelt")
     with tmp_dir:
         tmp_path = Path(tmp_dir.name)
 
@@ -226,10 +233,14 @@ def rotate_server_cert(
             [
                 "cfssl",
                 "gencert",
-                "-ca", str(ca_path),
-                "-ca-key", str(ca_key_path),
-                "-config", cfssl_config_path,
-                "-profile", cert_profile_name,
+                "-ca",
+                str(ca_path),
+                "-ca-key",
+                str(ca_key_path),
+                "-config",
+                cfssl_config_path,
+                "-profile",
+                cert_profile_name,
                 "-",
             ],
             check=True,
@@ -239,30 +250,30 @@ def rotate_server_cert(
         )
         cert = json.loads(gencert.stdout)
 
-    items = (
-        sops.KVPair("vaultTLSCert", cert["cert"]),
-        sops.KVPair("vaultTLSCSR", cert["csr"]),
-        sops.KVPair("vaultTLSKey", cert["key"]),
-    )
-    sops.upsert(Path("secrets/vault.yaml"), items)
+    tls_cert_chain = f"{cert['cert'].strip()}\n{ca_cert}\n"
+    secrets = {
+        "clan-destiny-vault/tlsKey": cert["key"],
+        "clan-destiny-vault/tlsCertChain": tls_cert_chain,
+    }
+    clan.vars_set(machine, secrets)
 
 
 @vault.command(
     name="init",
     help="""Execute vault operator init, unseal vault, and enable KV v2.
 
-This will upsert the secrets `root_token` and `unseal_key` under the given pass
-prefix.
+This will upsert the secrets `root_token` and `unseal_key` in the given pass
+directory.
 """,
 )
 @click.option(
-    "--pass-prefix",
-    default="io/lightsd/pki/vault/",
+    "--pass-dir",
+    default="io/lightsd/pki/vault",
     required=True,
     show_default=True,
 )
-def init(pass_prefix: str) -> None:
-    cmd = ["vault", "operator", "init", "-status"] 
+def init(pass_dir: str) -> None:
+    cmd = ["vault", "operator", "init", "-status"]
     logging.info(
         f"Calling `{', '.join(cmd)}' to check if vault is already initialized."
     )
@@ -278,7 +289,9 @@ def init(pass_prefix: str) -> None:
 
     vault_init = subprocess.run(
         [
-            "vault", "operator", "init",
+            "vault",
+            "operator",
+            "init",
             "-format=json",
             "-key-shares=1",
             "-key-threshold=1",
@@ -295,14 +308,7 @@ def init(pass_prefix: str) -> None:
         ("unseal_key", unseal_key),
         ("root_token", root_token),
     ):
-        dest = f"{pass_prefix}{name}"
-        logging.info(f"Save the {name} in pass with name {dest}")
-        subprocess.run(
-            ["pass", "insert", "--force", "--multiline", dest],
-            input=secret,
-            check=True,
-            encoding="ascii",
-        )
+        pass_store.set(os.path.join(pass_dir, name), secret)
 
     _unseal(unseal_key)
 
@@ -318,21 +324,13 @@ def init(pass_prefix: str) -> None:
     help="Unseal vault using a key stored in pass",
 )
 @click.option(
-    "--pass-prefix",
-    default="io/lightsd/pki/vault/",
+    "--pass-dir",
+    default="io/lightsd/pki/vault",
     required=True,
     show_default=True,
 )
-def unseal(pass_prefix: str) -> None:
-    unseal_key_path = f"{pass_prefix}unseal_key"
-    logging.info(f"Waiting for `pass show {unseal_key_path}`")
-    unseal_key = subprocess.run(
-        ["pass", "show", unseal_key_path],
-        check=True,
-        capture_output=True,
-        encoding="utf-8",
-    ).stdout
-    _unseal(unseal_key)
+def unseal(pass_dir: str) -> None:
+    _unseal(pass_store.show(os.path.join(pass_dir, "unseal_key")))
 
 
 def _unseal(unseal_key: str) -> None:
@@ -343,10 +341,7 @@ def _unseal(unseal_key: str) -> None:
     vault.wait()
     vault.close()
     if vault.exitstatus != 0:
-        logging.error(
-            f"vault operator unseal failed with "
-            f"status {vault.status}"
-        )
+        logging.error(f"vault operator unseal failed with " f"status {vault.status}")
         sys.exit(1)
 
 
@@ -354,26 +349,17 @@ def _unseal(unseal_key: str) -> None:
     name="rotate-approle",
     help="""Replace the given AppRole credentials.
 
-The following secrets will be written to the given secrets file.
+The following clan vars will be set for the given machine and var generator:
+
+- `vaultRoleId`;
+- `vaultSecretId`.
 """,
-)
-@click.option(
-    "--secrets-file-path",
-    help="Path to the file where sops will set secrets",
-    default=Path("secrets/global.yaml"),
-    show_default=True,
-    type=click.Path(dir_okay=False, writable=True, path_type=Path),
-)
-@click.option(
-    "--secrets-prefix",
-    help="The name of the sops secret corresponding to this AppRole.",
-    required=True,
 )
 @click.option(
     "--vault-policy-path",
     help=(
         "Path to the Vault policy for this role defaults to "
-        "../multilab/library/vault-policies/<ROLE>.hcl"
+        "../destiny-config/library/vault-policies/<ROLE>.hcl"
     ),
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
 )
@@ -384,42 +370,39 @@ The following secrets will be written to the given secrets file.
     show_default=True,
 )
 @click.option("--role", help="AppRole name to rotate", required=True)
+@click.option(
+    "--machine",
+    help="The clan machine to use with `clan vars set`",
+    required=True,
+)
+@click.option(
+    "--vars-generator",
+    help=(
+        "The name of the clan vars generator where `vaultRoleId` "
+        "and `vaultSecretId` for this AppRole will be set"
+    ),
+    required=True,
+)
+@clan.ensure_root_directory
 def rotate_approle(
     role: str,
     vault_root_token_pass_name: str,
     vault_policy_path: Optional[Path],
-    secrets_prefix: str,
-    secrets_file_path: Path,
+    machine: str,
+    vars_generator: str,
 ) -> None:
+    # It would be nice if we could take the policies as some kind of dependency
+    # for this script, like you would do with a filegroup in Bazel.
     if vault_policy_path is None:
-        vault_policy_path = Path("../multilab/library/vault-policies", f"{role}.hcl")
-
-    # Take the policies as some kind of Nix dependency like
-    # filegroup in Bazel and then find a way to reference
-    # the filegroup from Python to dereference its paths.
-    sops_config_path = Path(".sops.yaml")
-    for desc, path in (
-        ("sops config file", sops_config_path),
-        (f"vault policy file for {role}", vault_policy_path),
-    ):
-        if path.is_file():
-            continue
-        logging.error(
-                f"Could not find {desc} ({path}).\n\nThis tool is meant "
-                f"to be called from the root of your config repository"
-            )
-        sys.exit(1)
-
-    logging.info("Fetching vault root token out of pass")
-    vault_token = subprocess.run(
-        ["pass", "show", vault_root_token_pass_name],
-        check=True,
-        capture_output=True,
-        encoding="utf-8",
-    ).stdout
+        vault_policy_path = Path(
+            "../destiny-config/library/vault-policies", f"{role}.hcl"
+        )
+        if not vault_policy_path.is_file():
+            logging.error(f"Could not find vault policy file at {vault_policy_path}")
+            sys.exit(1)
 
     vault_env = os.environ.copy()
-    vault_env["VAULT_TOKEN"] = vault_token
+    vault_env["VAULT_TOKEN"] = pass_store.show(vault_root_token_pass_name)
     vault_call = functools.partial(
         subprocess.run,
         check=True,
@@ -430,36 +413,48 @@ def rotate_approle(
     vault_policy_name = role
     vault_approle_path = f"auth/approle/role/{role}"
 
-    auth_methods = json.loads(vault_call(
-        ["vault", "auth", "list", "-format=json"],
-        capture_output=True,
-    ).stdout)
+    auth_methods = json.loads(
+        vault_call(
+            ["vault", "auth", "list", "-format=json"],
+            capture_output=True,
+        ).stdout
+    )
     if "approle/" not in auth_methods:
         logging.info("Enabling the approle auth method at approle/")
         vault_call(["vault", "auth", "enable", "approle"])
 
     logging.info(f"Making vault calls to create AppRole {role}")
 
-    vault_call([
-        "vault", "write", vault_approle_path,
-        f"token_policies={vault_policy_name}",
-        "token_ttl=1h",
-        "token_max_ttl=4h",
-    ])
+    vault_call(
+        [
+            "vault",
+            "write",
+            vault_approle_path,
+            f"token_policies={vault_policy_name}",
+            "token_ttl=1h",
+            "token_max_ttl=4h",
+        ]
+    )
 
     cmd = ["vault", "read", "-format=json", f"{vault_approle_path}/role-id"]
-    create_role_id = vault_call( cmd, capture_output=True)
+    create_role_id = vault_call(cmd, capture_output=True)
     role_id = json.loads(create_role_id.stdout)["data"]["role_id"]
 
-    cmd = ["vault", "write", "-force", "-format=json", f"{vault_approle_path}/secret-id"]
+    cmd = [
+        "vault",
+        "write",
+        "-force",
+        "-format=json",
+        f"{vault_approle_path}/secret-id",
+    ]
     create_secret_id = vault_call(cmd, capture_output=True)
     secret_id = json.loads(create_secret_id.stdout)["data"]["secret_id"]
 
-    items = (
-        sops.KVPair(f"{secrets_prefix}RoleId", role_id),
-        sops.KVPair(f"{secrets_prefix}SecretId", secret_id),
-    )
-    sops.upsert(secrets_file_path, items)
+    vars = {
+        f"{vars_generator}/vaultRoleId": role_id,
+        f"{vars_generator}/vaultSecretId": secret_id,
+    }
+    clan.vars_set(machine, vars)
 
     logging.info(f"Calling vault policy to create policy {vault_policy_name}")
     cmd = ["vault", "policy", "write", vault_policy_name, str(vault_policy_path)]

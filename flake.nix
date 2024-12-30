@@ -2,6 +2,10 @@
   description = "The code library supporting a Nix'ed homelab";
 
   inputs = {
+    clan-core.url = "git+https://git.clan.lol/clan/clan-core";
+    # clan-core.url = "git+file:///stash/home/kal/cu/src/nix/clan-core";
+    clan-core.inputs.nixpkgs.follows = "nixpkgs";
+
     flake-parts.url = "github:hercules-ci/flake-parts";
     flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs";
 
@@ -200,11 +204,11 @@
             programs.mypy.directories =
               let
                 mkConfig = package: {
-                  extraPythonPackages = [
-                    package
+                  extraPythonPackages = package.dependencies ++ [
                     pkgs.python3Packages.types-pyyaml
                   ];
                   options = [
+                    "--enable-incomplete-feature=NewGenericSyntax"
                     "--explicit-package-bases"
                     "--exclude"
                     "setup.py"
