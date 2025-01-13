@@ -15,7 +15,7 @@ let
   );
   passwdContents = (lib.concatStringsSep "\n" (lib.attrValues (lib.mapAttrs userToPasswd users)));
 
-  userToShadow = k: { ... }: "${k}:!:1::::::";
+  userToShadow = k: { lockAccount ? true, ... }: "${k}:${lib.optionalString lockAccount "!"}:1::::::";
   shadowContents = (lib.concatStringsSep "\n" (lib.attrValues (lib.mapAttrs userToShadow users)));
 
   # Map groups to members
