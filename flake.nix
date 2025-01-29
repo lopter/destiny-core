@@ -2,7 +2,7 @@
   description = "The code library supporting a Nix'ed homelab";
 
   inputs = {
-    clan-core.url = "git+https://git.clan.lol/clan/clan-core";
+    clan-core.url = "git+https://git.clan.lol/clan/clan-core?rev=553fb24657beea116ed8b2f3c1794640a7ffb274";
     # clan-core.url = "git+file:///stash/home/kal/cu/src/nix/clan-core";
     clan-core.inputs.nixpkgs.follows = "nixpkgs";
 
