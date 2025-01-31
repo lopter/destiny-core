@@ -1,18 +1,21 @@
 @font-face {
   font-family: "Inconsolata";
   src: url("/fonts/Inconsolata-VariableFont_wdth,wght.ttf");
+  font-display: swap;
 }
 
 @font-face {
   font-family: "Raleway";
   font-style: normal;
   src: url("/fonts/Raleway-VariableFont_wght.ttf");
+  font-display: swap;
 }
 
 @font-face {
   font-family: "Raleway";
   font-style: italic;
   src: url("/fonts/Raleway-VariableFont_wght.ttf");
+  font-display: swap;
 }
 
 @font-face {
@@ -20,12 +23,14 @@
   font-style: normal;
   font-weight: normal;
   src: url("/fonts/Merriweather-Regular.ttf");
+  font-display: swap;
 }
 
 @font-face {
   font-family: "Merriweather";
   font-style: italic;
   src: url("/fonts/Merriweather-Italic.ttf");
+  font-display: swap;
 }
 
 @font-face {
@@ -33,6 +38,7 @@
   font-style: italic;
   font-weight: bold;
   src: url("/fonts/Merriweather-BoldItalic.ttf");
+  font-display: swap;
 }
 
 body {
