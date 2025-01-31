@@ -47,18 +47,6 @@ body {
   height: 100vh;
 }
 
-div.page-border {
-  --border-size: calc(var(--body-margin) * 2);
-  height: var(--border-size);
-  width: 100%;
-  background-image: url("/tile.svg");
-  background-size: var(--border-size) var(--border-size);
-}
-
-div.bottom-border {
-  transform: rotate(180deg);
-}
-
 main.home {
   display: flex;
   flex-direction: column;
