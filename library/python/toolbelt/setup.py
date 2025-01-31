@@ -10,7 +10,7 @@ setuptools.setup(
     include_package_data=True,
     entry_points={
         "console_scripts": [
-            "clan-destiny = toolbelt.main:main",
+            "clan-destiny = toolbelt:main",
         ],
     },
 )

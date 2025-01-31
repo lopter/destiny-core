@@ -12,10 +12,9 @@ from pathlib import Path
 from typing import Any, Optional
 
 from . import clan, pass_store
-from .main import main
 
 
-@main.group(help="Hashicorp's Vault ops")
+@click.group(help="Hashicorp's Vault ops")
 def vault() -> None:
     pass
 
