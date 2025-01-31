@@ -1,0 +1,108 @@
+@font-face {
+  font-family: "Inconsolata";
+  src: url("/fonts/Inconsolata-VariableFont_wdth,wght.ttf");
+}
+
+@font-face {
+  font-family: "Raleway";
+  font-style: normal;
+  src: url("/fonts/Raleway-VariableFont_wght.ttf");
+}
+
+@font-face {
+  font-family: "Raleway";
+  font-style: italic;
+  src: url("/fonts/Raleway-VariableFont_wght.ttf");
+}
+
+@font-face {
+  font-family: "Merriweather";
+  font-style: normal;
+  font-weight: normal;
+  src: url("/fonts/Merriweather-Regular.ttf");
+}
+
+@font-face {
+  font-family: "Merriweather";
+  font-style: italic;
+  src: url("/fonts/Merriweather-Italic.ttf");
+}
+
+@font-face {
+  font-family: "Merriweather";
+  font-style: italic;
+  font-weight: bold;
+  src: url("/fonts/Merriweather-BoldItalic.ttf");
+}
+
+body {
+  font-family: "Raleway", sans-serif;
+
+  --body-margin: 10px;
+  margin: 0 var(--body-margin) 0;
+
+  display: flex;
+  flex-direction: column;
+
+  height: 100vh;
+}
+
+div.page-border {
+  --border-size: calc(var(--body-margin) * 2);
+  height: var(--border-size);
+  width: 100%;
+  background-image: url("/tile.svg");
+  background-size: var(--border-size) var(--border-size);
+}
+
+div.bottom-border {
+  transform: rotate(180deg);
+}
+
+main.home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+}
+
+main.home > img {
+  margin-top: 1em;
+  /*
+   * We could clamp the height to some absolute value so it doesn't become
+   * ridiculus on big vertical screens:
+   */
+  height: 50vh;
+  align-self: center;
+}
+
+
+@media (min-width: 800px) {
+  main.home nav {
+    width: 250px;
+  }
+}
+
+main.home p {
+  align-self: center;
+}
+
+main.home nav > ul {
+  display: flex;
+  justify-content: space-around;
+  list-style-type: none;
+  padding: 0;
+}
+
+@media (max-width: 799px) {
+  main.home nav > ul {
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    height: 5em;
+  }
+}
+
+p.footer-copyright {
+}

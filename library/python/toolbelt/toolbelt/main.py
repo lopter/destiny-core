@@ -2,7 +2,7 @@ import click
 import logging
 
 
-@click.group(help="Toolbelt for multilab")
+@click.group(help="Toolbelt for clan-destiny")
 @click.pass_context
 def main(_: click.Context) -> None:
     logging.basicConfig(

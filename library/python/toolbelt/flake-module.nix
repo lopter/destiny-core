@@ -15,7 +15,9 @@
 
         dependencies = with pkgs.python3Packages; [
           click
+          ovh
           pexpect
+          pyyaml
         ];
 
         propagatedBuildInputs = with pkgs; [
@@ -26,6 +28,8 @@
           }))
 
           inputs'.clan-core.packages.clan-cli
+
+          pass
         ];
       };
     in
