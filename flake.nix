@@ -153,11 +153,6 @@
             packages =
               [
                 config.treefmt.build.wrapper
-
-                (setupRustToolchain {
-                  nightly = false;
-                  withWasm32 = false;
-                })
               ]
               ++ (with pkgs; [
                 cfssl
