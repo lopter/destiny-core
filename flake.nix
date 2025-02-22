@@ -43,12 +43,6 @@
     nix2container.url = "github:nlewo/nix2container";
     nix2container.inputs.nixpkgs.follows = "nixpkgs";
     mk-shell-bin.url = "github:rrbutani/nix-mk-shell-bin";
-    # Avoid the use of nix --impure, see https://github.com/cachix/devenv/pull/1018
-    # but the UX is still not really there, e.g. you still need --impure to run
-    # something like `nix flake show`. I guess this approach bets on the fact
-    # that devenv is for interactive use.
-    devenv-root.url = "file+file:///dev/null"; # this url is set/overriden from .envrc
-    devenv-root.flake = false;
   };
 
   outputs =
@@ -151,12 +145,6 @@
             );
 
           devenv.shells.default = {
-            devenv.root =
-              let
-                devenvRootFileContent = builtins.readFile inputs.devenv-root.outPath;
-              in
-              pkgs.lib.mkIf (devenvRootFileContent != "") devenvRootFileContent;
-
             name = "default";
 
             # Enable C for Rust, since we are setting up our toolchain manually.

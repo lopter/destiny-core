@@ -1,15 +1,8 @@
-{ inputs, ... }:
 {
   perSystem =
     { pkgs, setupRustToolchain, ... }:
     {
       devenv.shells.blogon = {
-        devenv.root =
-          let
-            devenvRootFileContent = builtins.readFile inputs.devenv-root.outPath;
-          in
-          pkgs.lib.mkIf (devenvRootFileContent != "") devenvRootFileContent;
-
         name = "blogon";
 
         packages = with pkgs; [
