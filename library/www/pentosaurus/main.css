@@ -98,5 +98,32 @@ main.home nav > ul {
   }
 }
 
-p.footer-copyright {
+main.album {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+}
+
+main.album div.viewer {
+  display: flex;
+  align-items: center;
+}
+
+main.album div.viewer img {
+  width: 80vw;
+}
+
+main.album ul {
+  display: flex;
+  list-style-type: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0;
+  width: 60vw;
+}
+
+main.album ul img {
+  width: 200px;
 }
