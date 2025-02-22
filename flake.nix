@@ -61,6 +61,7 @@
         ./library/python/toolbelt/flake-module.nix
 
         ./library/rust/blogon/flake-module.nix
+        ./library/rust/hass-pam-authenticate/flake-module.nix
       ];
       systems = [
         "x86_64-linux"
