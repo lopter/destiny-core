@@ -16,11 +16,11 @@
         dependencies = with pkgs.python3Packages; [
           click
           pexpect
+          python-pam
         ];
 
         propagatedBuildInputs = with pkgs; [
           coreutils
-          su
         ];
       };
     in
