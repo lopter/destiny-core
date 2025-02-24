@@ -1,9 +1,0 @@
-[package]
-name = "hass-pam-authenticate"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-# See https://gitlab.com/LeChatP/rust-pam-client/ as an alternative
-pam = "0.8.0"
-anyhow = "1"

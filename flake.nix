@@ -58,10 +58,10 @@
 
         ./library/python/acl_watcher/flake-module.nix
         ./library/python/backups/flake-module.nix
+        ./library/python/hass-pam-authenticate/flake-module.nix
         ./library/python/toolbelt/flake-module.nix
 
         ./library/rust/blogon/flake-module.nix
-        ./library/rust/hass-pam-authenticate/flake-module.nix
       ];
       systems = [
         "x86_64-linux"
