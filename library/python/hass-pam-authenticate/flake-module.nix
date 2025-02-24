@@ -17,6 +17,7 @@
           click
           pexpect
           python-pam
+          systemd
         ];
 
         propagatedBuildInputs = with pkgs; [

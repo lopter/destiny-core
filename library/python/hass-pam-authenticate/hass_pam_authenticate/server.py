@@ -1,11 +1,7 @@
 import click
 import functools
-import grp
 import logging
-import os
 import pexpect
-import pwd
-import socketserver
 import sys
 import time
 
@@ -15,49 +11,41 @@ from xmlrpc.server import (
     SimpleXMLRPCRequestHandler,
 )
 
+from . import systemd
+
 logger = logging.getLogger("server")
 
 
 class UnixStreamXMLRPCRequestHandler(SimpleXMLRPCRequestHandler):
+    disable_nagle_algorithm = False  # Non-applicable to Unix sockets.
+
     def address_string(self):
         return self.client_address
 
 
-class UnixStreamXMLRPCServer(
-    socketserver.UnixStreamServer,
-    SimpleXMLRPCDispatcher
-):
+class UnixStreamXMLRPCServer(systemd.UnixStreamServer, SimpleXMLRPCDispatcher):
+
     def __init__(
         self,
-        addr,
-        log_requests=True,
-        allow_none=True,
-        encoding=None,
-        bind_and_activate=True,
-        use_builtin_types=True,
-    ):
+        socket_name: str,
+        log_requests: bool = True,
+        allow_none: bool = True,
+        encoding: str | None =None,
+        use_builtin_types: bool = True,
+    ) -> None:
         self.logRequests = log_requests
         SimpleXMLRPCDispatcher.__init__(
             self, allow_none, encoding, use_builtin_types
         )
-        if os.path.exists(addr):
-            os.unlink(addr)
-        socketserver.UnixStreamServer.__init__(
-            self,
-            addr,
-            UnixStreamXMLRPCRequestHandler,
-            bind_and_activate,
+        systemd.UnixStreamServer.__init__(
+            self, socket_name, UnixStreamXMLRPCRequestHandler,
         )
-        uid = pwd.getpwnam("hass-pam-authenticate").pw_uid
-        gid = grp.getgrnam("hass").gr_gid
-        os.chown(addr, uid, gid)
-        os.chmod(addr, 0o660)
 
 
 @click.command()
 @click.pass_context
 def server(ctx: click.Context) -> None:
-    server = UnixStreamXMLRPCServer(ctx.obj.socket_path)
+    server = UnixStreamXMLRPCServer(ctx.obj.socket_name)
     server.register_introspection_functions()
     server.register_function(authenticate)
     server.serve_forever()

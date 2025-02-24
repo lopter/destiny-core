@@ -9,7 +9,7 @@ import xmlrpc.client
 @click.command()
 @click.pass_context
 def client(ctx: click.Context) -> None:
-    client = UnixStreamXMLRPCClient(ctx.obj.socket_path)
+    client = UnixStreamXMLRPCClient(str(ctx.obj.socket_path))
     ok = client.authenticate(getenv("username"), getenv("password"))
     sys.exit(0 if ok else 1)
 
