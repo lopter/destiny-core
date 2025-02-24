@@ -3,18 +3,25 @@ import os
 import pexpect
 import sys
 
+from pathlib import Path
+
 
 @click.command()
 def main() -> None:
-    username = getenv("username")
-    password = getenv("password")
-
     true_bin = pexpect.which("true")
     if not true_bin:
         click.echo("Could not find `true` in `PATH`", err=True)
         sys.exit(1)
+
+    su_bin = "/run/wrappers/bin/su"
+    if not Path(su_bin).exists():
+        click.echo(f"Could not find `su` at `{su_bin}`", err=True)
+        sys.exit(1)
     
-    su = pexpect.spawn("su", ["-s", true_bin, username])
+    username = getenv("username")
+    password = getenv("password")
+
+    su = pexpect.spawn(su_bin, ["-s", true_bin, username])
     su.expect("Password:")
     su.sendline(password)
     su.wait()
