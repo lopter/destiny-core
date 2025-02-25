@@ -5,7 +5,7 @@ import pam
 import pwd
 import time
 
-from pathlib import Path
+from typing import Iterable
 from xmlrpc.server import (
     SimpleXMLRPCDispatcher,
     SimpleXMLRPCRequestHandler,
@@ -43,11 +43,17 @@ class UnixStreamXMLRPCServer(systemd.UnixStreamServer, SimpleXMLRPCDispatcher):
 
 
 @click.command()
+@click.option(
+    "--remote-user",
+    help="Do not set `local_only` for this user",
+    multiple=True,
+)
 @click.pass_context
-def server(ctx: click.Context) -> None:
+def server(ctx: click.Context, remote_user: list[str]) -> None:
     server = UnixStreamXMLRPCServer(ctx.obj.socket_name)
     server.register_introspection_functions()
-    server.register_function(authenticate)
+    wrapper = functools.partial(authenticate, remote_user)
+    server.register_function(functools.update_wrapper(wrapper, authenticate))
     server.serve_forever()
 
 
@@ -71,11 +77,16 @@ def rate_limit(fn):
 
 
 @rate_limit
-def authenticate(username: str, password: str) -> bool:
+def authenticate(
+    remote_users: Iterable[str],
+    username: str,
+    password: str,
+) -> bool:
     authenticator = pam.PamAuthenticator()
     service = "hass-pam-authenticate"
     if authenticator.authenticate(username, password, service):
         print(f"name = {pwd.getpwnam(username).pw_gecos}")
+        print(f"local_only = {'false' if username in remote_users else 'true'}")
         return True
     logging.info(
         f"Authentication failed for {username}: "

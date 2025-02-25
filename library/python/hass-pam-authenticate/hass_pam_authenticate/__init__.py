@@ -23,13 +23,20 @@ from . import client, server, types
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
 )
 @click.pass_context
-def main(ctx: click.Context, socket_name: str, socket_path: Path) -> None:
+def main(
+    ctx: click.Context,
+    socket_name: str,
+    socket_path: Path,
+) -> None:
     logging.basicConfig(
         level=logging.INFO,
         datefmt="%Y-%m-%dT%H:%M:%S%z",
         format="[%(levelname)s] %(message)s",
     )
-    ctx.obj = types.MainOptions(socket_name, socket_path)
+    ctx.obj = types.MainOptions(
+        socket_name,
+        socket_path,
+    )
 
 
 main.add_command(server.server)
