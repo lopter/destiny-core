@@ -2,6 +2,7 @@ import click
 import functools
 import logging
 import pam
+import pwd
 import time
 
 from pathlib import Path
@@ -74,6 +75,7 @@ def authenticate(username: str, password: str) -> bool:
     authenticator = pam.PamAuthenticator()
     service = "hass-pam-authenticate"
     if authenticator.authenticate(username, password, service):
+        print(f"name = {pwd.getpwnam(username).pw_gecos}")
         return True
     logging.info(
         f"Authentication failed for {username}: "
