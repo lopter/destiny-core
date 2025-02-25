@@ -16,6 +16,7 @@ def client(ctx: click.Context) -> None:
     client = UnixStreamXMLRPCClient(str(ctx.obj.socket_path))
     response = AuthenticateResponse(*client.authenticate(username, password))
     print(f"name = {response.real_name}")
+    print(f"group = system-users")
     print(f"local_only = {'true' if response.local_only else 'false'}")
     sys.exit(0 if response.ok else 1)
 
