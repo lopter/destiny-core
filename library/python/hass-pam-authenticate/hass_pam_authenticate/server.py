@@ -1,6 +1,7 @@
 import click
 import functools
 import logging
+from hass_pam_authenticate.types import AuthenticateResponse
 import pam
 import pwd
 import time
@@ -12,6 +13,7 @@ from xmlrpc.server import (
 )
 
 from . import systemd
+from .types import AuthenticateResponse
 
 logger = logging.getLogger("server")
 
@@ -81,15 +83,19 @@ def authenticate(
     remote_users: Iterable[str],
     username: str,
     password: str,
-) -> bool:
+) -> tuple[bool, str, bool]:
     authenticator = pam.PamAuthenticator()
     service = "hass-pam-authenticate"
     if authenticator.authenticate(username, password, service):
-        print(f"name = {pwd.getpwnam(username).pw_gecos}")
-        print(f"local_only = {'false' if username in remote_users else 'true'}")
-        return True
-    logging.info(
-        f"Authentication failed for {username}: "
-        f"code={authenticator.code}, reason={authenticator.reason}"
-    )
-    return False
+        response = AuthenticateResponse(
+            ok=True,
+            real_name=pwd.getpwnam(username).pw_gecos,
+            local_only=username not in remote_users,
+        )
+    else:
+        response = AuthenticateResponse(ok=False, real_name="", local_only=False)
+        logging.info(
+            f"Authentication failed for {username}: "
+            f"code={authenticator.code}, reason={authenticator.reason}"
+        )
+    return tuple(response)

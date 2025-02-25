@@ -5,13 +5,19 @@ import socket
 import sys
 import xmlrpc.client
 
+from .types import AuthenticateResponse
+
 
 @click.command()
 @click.pass_context
 def client(ctx: click.Context) -> None:
+    username = getenv("username")
+    password = getenv("password")
     client = UnixStreamXMLRPCClient(str(ctx.obj.socket_path))
-    ok = client.authenticate(getenv("username"), getenv("password"))
-    sys.exit(0 if ok else 1)
+    response = AuthenticateResponse(*client.authenticate(username, password))
+    print(f"name = {response.real_name}")
+    print(f"local_only = {'true' if response.local_only else 'false'}")
+    sys.exit(0 if response.ok else 1)
 
 
 class UnixStreamXMLRPCClient(xmlrpc.client.ServerProxy):
