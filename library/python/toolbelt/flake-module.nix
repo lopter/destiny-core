@@ -17,6 +17,7 @@
           click
           ovh
           pexpect
+          pillow
           pyyaml
         ];
 
@@ -30,6 +31,8 @@
           inputs'.clan-core.packages.clan-cli
 
           pass
+
+          s3cmd
         ];
       };
     in

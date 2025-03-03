@@ -1,15 +1,23 @@
 import click
+import errno
 import itertools
 import json
 import logging
+import multiprocessing
+import os
 import ovh
+import PIL.Image
+import shutil
 import sys
 import yaml
 
 from collections.abc import Generator
-from typing import Any, Final, cast
+from pathlib import Path
+from typing import Any, Final, Iterator, cast, NamedTuple
 
-from . import pass_store
+from . import pass_store, s3cmd
+
+logger = logging.getLogger("pentosaurus")
 
 PASS_NAME: Final[str] = "com/ovh/pentosaurus@gmail.com"
 ZONE_NAME: Final[str] = "atelierpentosaurus.com"
@@ -32,10 +40,7 @@ pass_name_option = click.option(
 
 
 @click.group(
-    help=(
-        f"Tools for managing Pentosaurus' web landing page at "
-        f"https://www.{ZONE_NAME}/"
-    ),
+    help=f"Manage Pentosaurus' web landing page at https://www.{ZONE_NAME}/",
 )
 def pentosaurus() -> None:
     pass
@@ -158,3 +163,224 @@ def new_ovh_client(pass_name: str) -> ovh.Client:
     pass_contents = pass_store.show(pass_name)
     credentials = yaml.safe_load(pass_contents)["certbot_api_keys"]
     return ovh.Client(endpoint="ovh-eu", **credentials)
+
+
+@click.group(help="Manage pictures for Pentosaurus")
+def photos() -> None:
+    pass
+
+
+pentosaurus.add_command(photos)
+
+
+@photos.command(
+    help="Process a directory of photos so that we can use them in the website."
+)
+@click.option(
+    "--input-dir",
+    help="Directory containing the pictures to process",
+    required=True,
+    type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path),
+)
+@click.option(
+    "--output-dir",
+    help="Directory where the processed pictures will be stored",
+    required=True,
+    type=click.Path(file_okay=False, dir_okay=True, path_type=Path),
+)
+@click.option(
+    "--thumbnail-size",
+    help="Size used to create square thumbnails of the images",
+    required=True,
+    type=click.IntRange(min=1),
+    default=200,
+    show_default=True,
+)
+def convert(
+    input_dir: Path,
+    output_dir: Path,
+    thumbnail_size: int,
+) -> None:
+    output_dir.mkdir(exist_ok=True)
+
+    def jobs() -> Iterator[tuple[Path, int, Path]]:
+        for filename in input_dir.iterdir():
+            yield (output_dir, thumbnail_size, input_dir / filename)
+
+    with multiprocessing.Pool() as workers:
+        result = workers.starmap_async(process_image, jobs())
+        images = [entry.asdict() for entry in result.get()]
+    workers.join()
+
+    manifest = {"version": 1, "images": images}
+    with (output_dir / "manifest.json").open("w") as fp:
+        json.dump(manifest, fp, indent=2)
+
+
+class ManifestEntry(NamedTuple):
+    name: str
+    width: int
+    height: int
+
+    def asdict(self) -> dict[str, Any]:
+        return self._asdict()
+
+
+def process_image(output_dir: Path, thumbnail_size: int, image_path: Path) -> ManifestEntry:
+    with PIL.Image.open(image_path) as source:
+        width, height = source.size
+        mid_x, mid_y = (width // 2, height // 2)
+        half_size = source.resize((mid_x, mid_y))
+        # To get the thumbnail, fit a square at the middle of the image,
+        # then crop it out, and resize it to the thumbnail size:
+        half_square_size = min(width, height) // 2
+        upper_left = (mid_x - half_square_size, mid_y - half_square_size)
+        lower_right = (mid_x + half_square_size, mid_y + half_square_size)
+        thumbnail = source.crop(box=(*upper_left, *lower_right))
+        thumbnail = thumbnail.resize((thumbnail_size, thumbnail_size))
+        opts = {}
+        if source.format == "JPEG":
+            opts.update(quality=90, optimize=True)
+        else:
+            msg = f"No saving options defined for image format {source.format}"
+            logger.info(msg)
+
+    image_dir = output_dir / image_path.stem
+    image_dir.mkdir(exist_ok=True)
+    full_size_path = image_dir / f"full{image_path.suffix}"
+    full_size_path.unlink(missing_ok=True)
+    try:
+        full_size_path.hardlink_to(image_path)
+    except OSError as exc:
+        if exc.errno != errno.EXDEV:
+            raise exc
+        shutil.copy2(image_path, full_size_path)
+    thumbnail.save(image_dir / f"thumb{image_path.suffix}", **opts)
+    half_size.save(image_dir / f"half{image_path.suffix}", **opts)
+
+    return ManifestEntry(image_path.stem, width, height)
+
+
+BUCKET_NAME: Final[str] = "pentosaurus-assets"
+BUCKET_HOST_BASE: Final[str] = "fly.storage.tigris.dev"
+
+
+s3_pass_name_option = click.option(
+    "--pass-name",
+    help="Name of the password in pass with the AWS-S3 compatible credentials.",
+    default=f"dev/tigris/storage/fly/{BUCKET_NAME}",
+    required=True,
+    show_default=True,
+)
+
+
+@photos.command(
+    help=f"Upload images to S3-compatible storage on `tigrisdata.com`",
+)
+@click.option(
+    "--local-dir",
+    required=True,
+    help=(
+        "Directory where the pictures processed "
+        "by the `convert` command are stored"
+    ),
+    type=click.Path(file_okay=False, exists=True, path_type=Path),
+)
+@click.option(
+    "--remote-dir",
+    required=True,
+    help="Pictures are uploaded to this directory of the bucket",
+    default="photos",
+    show_default=True,
+)
+@click.option(
+    "--bucket",
+    required=True,
+    default=BUCKET_NAME,
+    show_default=True,
+)
+@s3_pass_name_option
+@click.pass_context
+def upload(
+    ctx: click.Context,
+    local_dir: Path,
+    remote_dir: str,
+    bucket: str,
+    pass_name: str,
+) -> None:
+    if (s3_config := get_s3_config(pass_name)) is None:
+        ctx.exit(1)
+
+    remote_prefix, remote_basename = os.path.split(remote_dir.rstrip("/"))
+    if local_dir.name != remote_basename:
+        click.echo(
+            "The name of the local directory must match the name of "
+            "the remote directory (remote directory is actually a prefix)"
+        )
+        want_dir = local_dir.parent / remote_basename
+        if not click.confirm(f"Rename {local_dir} to {want_dir}?"):
+            click.echo("Upload cancelled", err=True)
+            ctx.exit(2)
+        if want_dir.exists():
+            click.echo(f"{want_dir} already exists", err=True)
+            click.echo("Upload cancelled", err=True)
+            ctx.exit(3)
+        local_dir.rename(want_dir)
+        local_dir = want_dir
+
+    s3cmd.sync(s3_config, local_dir, bucket, remote_prefix)
+
+    click.echo(f"""{local_dir} has been uploaded.
+
+Don't forget to set CORS rules on {bucket} if it has not been done:
+
+- See: https://www.tigrisdata.com/docs/buckets/cors/#specifying-cors-rules-via-the-tigris-dashboard
+- Allowed Methods: GET
+- Origins: *""")
+
+
+@photos.command(
+    help="Recursively delete paths from the given bucket on `tigrisdata.com`",
+)
+@click.option(
+    "--remote-path",
+    help="The remote path to recursively delete",
+)
+@click.option(
+    "--bucket",
+    required=True,
+    default=BUCKET_NAME,
+    show_default=True,
+)
+@s3_pass_name_option
+@click.pass_context
+def delete(
+    ctx: click.Context,
+    remote_path: str,
+    bucket: str,
+    pass_name: str,
+) -> None:
+    if (s3_config := get_s3_config(pass_name)) is None:
+        ctx.exit(1)
+
+    if click.confirm(f"Recursively delete {remote_path} from {bucket}?"):
+        s3cmd.delete(s3_config, bucket, remote_path)
+
+
+def get_s3_config(pass_name: str) -> s3cmd.Config | None:
+    pass_contents = pass_store.show(pass_name)
+    match credentials := yaml.safe_load(pass_contents):
+        case {
+            "AWS_ACCESS_KEY_ID": access_key,
+            "AWS_SECRET_ACCESS_KEY": secret_key,
+        }:
+            return s3cmd.Config(access_key, secret_key, BUCKET_HOST_BASE)
+        case _:
+            if not isinstance(credentials, dict):
+                logger.info(f"Expected to find a dict in pass but got a {type(credentials)}")
+            else:
+                wanted = ("AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY")
+                actual = tuple(credentials.keys())
+                msg = f"Expected to find {wanted} in pass, but got {actual}"
+                logger.info(msg)
+            return None
