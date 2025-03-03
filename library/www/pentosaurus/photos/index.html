@@ -10,14 +10,14 @@
     <!-- NOTE: Make sure s3_bucket_endpoint in `photos.mjs` matches the url below (without `/manifest.json` at the end): -->
     <link rel="preload" href="https://pentosaurus-assets.fly.storage.tigris.dev/photos/manifest.json" as="fetch" type="application/json" crossorigin="anonymous">
   </head>
-  <body>
+  <body id="top">
     <script type="module" src="../modules/photos.mjs"></script>
     <main>
       <nav>
         <ul>
           <li><a href="/">Infos</a></li>
           <li><a href="/photos/"><u>Photos</u></a></li>
-          <li><a href="/pento/">Pento</a></li>
+          <!--<li><a href="/pento/">Pento</a></li>-->
         </ul>
       </nav>
       <div class="viewer">
@@ -28,6 +28,9 @@
       </div>
       <div class="gallery">
       </div>
+      <p>
+        <a href="#top">↑</a>
+      <p>
     </main>
     <footer>
       <p>

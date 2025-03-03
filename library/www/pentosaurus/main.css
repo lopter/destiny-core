@@ -15,8 +15,10 @@
 }
 
 body {
+  --text-color: crimson;
+
   font-family: "Roboto", sans-serif;
-  color: red;
+  color: var(--text-color);
 
   --body-margin: 10px;
   margin: var(--body-margin);
@@ -29,7 +31,7 @@ body {
 
 a {
   text-decoration: none;
-  color: red;
+  color: var(--text-color);
 }
 
 p {
@@ -116,6 +118,7 @@ main {
     max-width: calc(var(--grid-size) * var(--columns) + 3 * var(--grid-gap));
 
     img {
+      cursor: pointer;
       max-height: var(--grid-size);
       max-width: var(--grid-size);
     }
@@ -131,6 +134,7 @@ main {
     p {
       font-size: xxx-large;
       margin: 10px;
+      cursor: pointer;
     }
 
     img {
