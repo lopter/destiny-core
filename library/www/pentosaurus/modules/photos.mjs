@@ -68,20 +68,46 @@ loadManifest()
       updateViewer(viewer_img, manifest.images[gallery_index]);
     });
 
-  document.addEventListener("keydown", (event) => {
-    // Check if no input or textarea is focused to avoid interfering with typing.
-    if (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA") {
-      return;
-    }
+    var touch_start_x = 0;
+    var is_zooming = false;
+    const swipe_threshold = 50; // Minimum horizontal distance (in pixels) to consider it a swipe
+    viewer.addEventListener("touchstart", (event) => {
+      is_zooming = event.touches.length > 1;
+      touch_start_x = event.changedTouches[0].screenX;
+    });
+    viewer.addEventListener("touchend", (event) => {
+      if (is_zooming || event.changedTouches.length > 1) {
+        return;
+      }
+      const touch_end_x = event.changedTouches[0].screenX;
+      const swipe_distance = touch_end_x - touch_start_x;
+      if (Math.abs(swipe_distance) < swipe_threshold) {
+        return;
+      }
+      if (swipe_distance < 0) {
+        // Swiped left: move to the next image
+        gallery_index = incrIndex(manifest, gallery_index);
+      } else {
+        // Swiped right: move to the previous image
+        gallery_index = decrIndex(manifest, gallery_index);
+      }
+      updateViewer(viewer_img, manifest.images[gallery_index]);
+    });
 
-    if (event.key === "ArrowLeft" || event.key.toLowerCase() === "h") {
-      gallery_index = decrIndex(manifest, gallery_index);
-      updateViewer(viewer_img, manifest.images[gallery_index]);
-    } else if (event.key === "ArrowRight" || event.key.toLowerCase() === "l") {
-      gallery_index = incrIndex(manifest, gallery_index);
-      updateViewer(viewer_img, manifest.images[gallery_index]);
-    }
-  })
+    document.addEventListener("keydown", (event) => {
+      // Check if no input or textarea is focused to avoid interfering with typing.
+      if (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA") {
+        return;
+      }
+
+      if (event.key === "ArrowLeft" || event.key.toLowerCase() === "h") {
+        gallery_index = decrIndex(manifest, gallery_index);
+        updateViewer(viewer_img, manifest.images[gallery_index]);
+      } else if (event.key === "ArrowRight" || event.key.toLowerCase() === "l") {
+        gallery_index = incrIndex(manifest, gallery_index);
+        updateViewer(viewer_img, manifest.images[gallery_index]);
+      }
+    })
 
   })
   .catch(error => console.error("Error loading manifest:", error));
