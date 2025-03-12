@@ -92,11 +92,8 @@ main {
     display: flex;
 
     img {
-      /*
-       * We could clamp the height to some absolute value so it doesn't become
-       * ridiculus on big vertical screens:
-       */
-      max-height: 50vh;
+      height: min(50vh, 1070px);
+      aspect-ratio: 1826 / 2140;
     }
   }
 
@@ -119,8 +116,8 @@ main {
 
     img {
       cursor: pointer;
-      max-height: var(--grid-size);
-      max-width: var(--grid-size);
+      height: var(--grid-size);
+      width: var(--grid-size);
     }
   }
 
@@ -140,6 +137,11 @@ main {
     img {
       max-width: 80vw;
       max-height: 80vh;
+    }
+
+    #initial-photo {
+      width: min(80vw, calc(80vh * (1333 / 2000)));
+      height: min(80vh, calc(80vw * (2000 / 1333)));
     }
   };
 }

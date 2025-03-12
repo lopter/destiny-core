@@ -31,19 +31,13 @@ loadManifest()
       return;
     }
 
-    const viewer_img = document.querySelector(".viewer img");
-    if (!viewer_img) {
-      console.error("viewer image not found");
-      return;
-    }
-
     // For each image entry in the manifest, create an image element
     manifest.images.forEach(image => {
       // Construct the URL for the thumbnail image using the entry's name
       const thumbUrl = `${s3_bucket_endpoint}/${image.name}/thumb.jpg`;
       const imgElement = document.createElement("img");
       imgElement.src = thumbUrl;
-      imgElement.addEventListener("click", () => { updateViewer(viewer_img, image); });
+      imgElement.addEventListener("click", () => { updateViewer(viewer, image); });
       gallery.appendChild(imgElement);
     });
     console.log(`Loaded ${manifest.images.length} images`);
@@ -61,11 +55,11 @@ loadManifest()
     }
     left_arrow.addEventListener("click", () => {
       gallery_index = decrIndex(manifest, gallery_index);
-      updateViewer(viewer_img, manifest.images[gallery_index]);
+      updateViewer(viewer, manifest.images[gallery_index]);
     });
     right_arrow.addEventListener("click", () => {
       gallery_index = incrIndex(manifest, gallery_index);
-      updateViewer(viewer_img, manifest.images[gallery_index]);
+      updateViewer(viewer, manifest.images[gallery_index]);
     });
 
     var touch_start_x = 0;
@@ -91,7 +85,7 @@ loadManifest()
         // Swiped right: move to the previous image
         gallery_index = decrIndex(manifest, gallery_index);
       }
-      updateViewer(viewer_img, manifest.images[gallery_index]);
+      updateViewer(viewer, manifest.images[gallery_index]);
     });
 
     document.addEventListener("keydown", (event) => {
@@ -102,10 +96,10 @@ loadManifest()
 
       if (event.key === "ArrowLeft" || event.key.toLowerCase() === "h") {
         gallery_index = decrIndex(manifest, gallery_index);
-        updateViewer(viewer_img, manifest.images[gallery_index]);
+        updateViewer(viewer, manifest.images[gallery_index]);
       } else if (event.key === "ArrowRight" || event.key.toLowerCase() === "l") {
         gallery_index = incrIndex(manifest, gallery_index);
-        updateViewer(viewer_img, manifest.images[gallery_index]);
+        updateViewer(viewer, manifest.images[gallery_index]);
       }
     })
 
@@ -120,8 +114,12 @@ function decrIndex(manifest, index) {
   return (index - 1 + manifest.images.length) % manifest.images.length;
 }
 
-function updateViewer(viewer_img, image) {
+function updateViewer(viewer, image) {
   const useHalf = window.innerWidth <= image.width / 2 || window.innerHeight <= image.height / 2;
   const resolution = useHalf ? "half" : "full";
-  viewer_img.src = `${s3_bucket_endpoint}/${image.name}/${resolution}.jpg`;
+  const picture = viewer.querySelector("picture");
+  picture.querySelectorAll("source").forEach(source => source.remove());
+  const img = viewer.querySelector("img");
+  img.id = "";
+  img.src = `${s3_bucket_endpoint}/${image.name}/${resolution}.jpg`;
 }
