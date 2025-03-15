@@ -1,18 +1,21 @@
 @font-face {
   font-family: "Inconsolata";
   src: url("/Inconsolata-VariableFont_wdth,wght.ttf");
+  font-display: swap;
 }
 
 @font-face {
   font-family: "Raleway";
   font-style: normal;
   src: url("/Raleway-VariableFont_wght.ttf");
+  font-display: swap;
 }
 
 @font-face {
   font-family: "Raleway";
   font-style: italic;
   src: url("/Raleway-VariableFont_wght.ttf");
+  font-display: swap;
 }
 
 @font-face {
@@ -20,12 +23,14 @@
   font-style: normal;
   font-weight: normal;
   src: url("/Merriweather-Regular.ttf");
+  font-display: swap;
 }
 
 @font-face {
   font-family: "Merriweather";
   font-style: italic;
   src: url("/Merriweather-Italic.ttf");
+  font-display: swap;
 }
 
 @font-face {
@@ -33,6 +38,21 @@
   font-style: italic;
   font-weight: bold;
   src: url("/Merriweather-BoldItalic.ttf");
+  font-display: swap;
+}
+
+:root {
+  --palette-green1: #deffa2;
+  --palette-green2: #1c3914;
+  --palette-pink1: #ff6aff;
+  --palette-purple1: #aa00ff;
+  --palette-purple2: #aa55ff;
+
+  --color-bg: var(--palette-green1);
+  --color-fg: var(--palette-green2);
+  --color-title: var(--palette-pink1);
+  --color-link: var(--palette-purple1);
+  --color-link-visited: var(--palette-purple2);
 }
 
 body {
@@ -45,14 +65,45 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  background-color: var(--color-bg);
+  color: var(--color-fg);
 }
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-title);
+  font-weight: normal;
+}
+
+a {
+  color: var(--color-link);
+}
+
+/*
+a:visited {
+  color: var(--color-link-visited);
+}
+*/
 
 div.body-inner {
   display: flex;
   flex-direction: column;
+
+  > nav {
+    margin-top: 1em;
+    font-size: x-large;
+
+    > ul > li {
+      margin-left: 1em;
+    }
+
+    > ul > li:first-child {
+      margin-left: 0;
+      margin-right: auto;
+    }
+  }
 }
 
-p {
+main p {
   font-family: "Merriweather", serif;
 }
 
@@ -69,38 +120,19 @@ main {
   justify-content: center;
   height: 100%;
   font-size: large;
-}
 
-@media (min-width: 1000px) {
-  main {
+
+  @media (min-width: 1000px) {
     width: 50vw;
   }
-}
 
-@media (min-width: 600px) and (max-width: 999px) {
-  main {
+  @media (min-width: 600px) and (max-width: 999px) {
     width: 66vw;
   }
-}
 
-@media (max-width: 599px) {
-  main {
+  @media (max-width: 599px) {
     width: calc(100vw - 2 * var(--body-margin));
   }
-}
-
-div.body-inner > nav {
-  margin-top: 1em;
-  font-size: x-large;
-}
-
-div.body-inner > nav > ul > li {
-  margin-left: 1em;
-}
-
-div.body-inner > nav > ul > li:first-child {
-  margin-left: 0;
-  margin-right: auto;
 }
 
 ul {
@@ -119,60 +151,63 @@ main.home {
   height: 371px;
   width: 600px;
   font-size: x-large;
-}
 
-@media (min-width: 700px) {
-  main.home > nav {
-    width: 100%;
-  }
-}
-
-@media (max-width: 699px) {
-  main.home > nav {
-    width: auto;
-  }
-
-  main.home > nav > ul {
-    flex-direction: column;
+  > nav {
+    @media (min-width: 700px) {
+      width: 100%;
+    }
+    @media (max-width: 699px) {
+      width: auto;
+      > ul {
+        flex-direction: column;
+      }
+    }
   }
 }
 
 main.blog-index {
   align-items: flex-start;
   margin: 2em 0 0 0;
-}
 
-main.blog-index > nav > ul {
-  flex-direction: column;
-}
-
-main.blog-index > nav > ul > li {
-  margin-top: 1em;
+  > nav > ul {
+    flex-direction: column;
+    > li {
+      margin-top: 1em;
+    }
+  }
 }
 
 main.blog-post {
   margin: 2em 0 0 0;
-}
 
-main.blog-post > h1 {
-  align-self: start;
+  > h1 {
+    align-self: start;
+  }
 }
 
 div.tags-list > ul {
   display: inline-flex;
   list-style-type: none;
   padding: 0;
+
+  > li {
+    margin-left: 1ex;
+    font-style: italic;
+  }
+
+  > li::after {
+    content: ",";
+  }
+
+  > li:last-child::after {
+    content: ".";
+  }
 }
 
-div.tags-list > ul > li {
-  margin-left: 1ex;
-  font-style: italic;
+footer > p > a small {
+  color: var(--color-fg);
 }
 
-div.tags-list > ul > li::after {
-  content: ",";
-}
-
-div.tags-list > ul > li:last-child::after {
-  content: ".";
+footer > p > a small:hover {
+  color: var(--color-link);
 }

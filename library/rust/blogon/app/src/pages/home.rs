@@ -8,11 +8,8 @@ pub fn Index() -> impl IntoView {
             <nav>
                 <ul>
                     <li><A href="/blog">Blog</A></li>
-                    // Find images for those instead:
-                    <li>GitHub</li>
-                    <li>LinkedIn</li>
-                    <li>Bluesky</li>
-                    <li>Twitter</li>
+                    <li>Contact</li>
+                    <li>Resume</li>
                 </ul>
             </nav>
         </main>

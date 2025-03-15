@@ -16,11 +16,12 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
             <head>
                 <meta charset="utf-8"/>
                 <meta name="viewport" content="width=device-width, initial-scale=1"/>
+                <meta name="description" content="Hello, I am Louis Opter, a generalist software engineer with an eye for: distributed systems, build systems (Nix, Bazel), self-hosting. Proficient in Python, Golang, and C. AKA, kalessin, lopter."/>
                 <AutoReload options=options.clone() />
                 <HydrationScripts options/>
                 <MetaTags/>
             </head>
-            <body>
+            <body id="#top">
                 <App/>
             </body>
         </html>
@@ -40,7 +41,13 @@ pub fn App() -> impl IntoView {
         <Stylesheet id="leptos" href="/pkg/blogon.css"/>
 
         // sets the document title
-        <Title text="Welcome to Leptos"/>
+        <Title formatter=|text: String| {
+            if text.is_empty() {
+                format!("Louis Opter (kalessin)")
+            } else {
+                format!("{} - Louis Opter (kalessin)", text)
+            }
+        }/>
 
         // content for this welcome page
         <Router>

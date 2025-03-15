@@ -1,71 +1,57 @@
 use anyhow::Result;
 use leptos::prelude::*;
+use leptos_meta::Title;
 use leptos_router::components::A;
 use std::path::PathBuf;
 
-use crate::components::NavBar;
+use crate::components::{Footer, NavBar};
 use crate::store;
 
 #[component]
 pub fn Index() -> impl IntoView {
     let index = Resource::new_blocking(|| (), move |_| async { get_store_index().await });
 
-    /* This + Transition/ErrorBoundary does not work as expected in SsrMode::PartiallyBlocked:
     let front_matters = move || {
         Suspend::new(async move {
             index
                 .await
                 .map(|front_matters| {
                     if front_matters.is_empty() {
-                        leptos::either::Either::Left(view! { "Loading…" })
+                        leptos::either::Either::Left(view! {
+                            "Something has yet to be posted…"
+                        })
                     } else {
                         leptos::either::Either::Right(
                             front_matters
                                 .into_iter()
-                                .map(|item| view! { <li>{item.title.clone()}</li> })
+                                .map(|item| {
+                                    let date = item.metadata.date.as_ref().map_or(
+                                        String::from("Unpublished"),
+                                        |dt| dt.format("%Y-%m-%d").to_string(),
+                                    );
+                                    view! {
+                                        <PostDetails
+                                            slug={ item.slug.clone() }
+                                            title={ item.metadata.title.clone() }
+                                            date={ date }
+                                            tags={ item.metadata.tags.clone() }
+                                        />
+                                    }
+                                })
                                 .collect::<Vec<_>>()
                         )
                     }
                 })
         })
     };
-    */
 
     view! {
+        <Title text="Blog Index" />
         <div class="body-inner">
         <NavBar />
         <main class="blog-index">
         <h1>Index</h1>
         <nav>
-        {move || match index.get() {
-            None => leptos::either::EitherOf3::A(view! { "Loading…" }.into_view()),
-            Some(Ok(list)) => leptos::either::EitherOf3::B(
-                view! {
-            <ul>
-                {list
-                    .into_iter()
-                    .map(|item| {
-                        let date = item.metadata.date.as_ref().map_or(
-                            String::from("Unpublished"),
-                            |dt| dt.format("%Y-%m-%d").to_string(),
-                        );
-                        view! {
-                            <PostDetails
-                                slug={ item.slug.clone() }
-                                title={ item.metadata.title.clone() }
-                                date={ date }
-                                tags={ item.metadata.tags.clone() }
-                            />
-                        }
-                    })
-                    .collect_view()}
-            </ul>
-            }.into_view()),
-            Some(Err(err)) => leptos::either::EitherOf3::C(view! {
-                {format!("Could not load index: {}", err.to_string())}
-            }.into_view()),
-        }}
-    /*
         <Transition fallback=move || view! { "Loading…" }>
             <ErrorBoundary fallback=move |errors| {
                 view! {
@@ -85,9 +71,9 @@ pub fn Index() -> impl IntoView {
             </ul>
             </ErrorBoundary>
         </Transition>
-    */
         </nav>
         </main>
+        <Footer />
         </div>
     }
 }
@@ -134,22 +120,43 @@ pub fn Post() -> impl IntoView {
         },
     );
 
+    let contents = Suspend::new(async move {
+        post
+            .await
+            .map(|post| {
+                let title = post.front_matter.metadata.title;
+                view! {
+                    <Title text={ title.clone() } />
+                    <h1>{ title }</h1>
+                    <article inner_html=post.html_body></article>
+                }
+            })
+    });
+
     view! {
+        <Title text="Blog Post" />
         <div class="body-inner">
         <NavBar />
         <main class="blog-post">
-        {move || match post.get() {
-            None => leptos::either::EitherOf3::A(view! { <p>{"Loading…"}</p> }.into_view()),
-            // setup some nav with the ToC
-            Some(Ok(post)) => leptos::either::EitherOf3::B(view! {
-                <h1>{ post.front_matter.metadata.title }</h1>
-                <article inner_html=post.html_body></article>
-            }.into_view()),
-            Some(Err(err)) => leptos::either::EitherOf3::C(view! {
-                <p>{format!("Could not load index: {}", err.to_string())}</p>
-            }.into_view()),
-        }}
+        <Transition fallback=move || view! { "Loading…" }>
+            <ErrorBoundary fallback=move |errors| {
+                view! {
+                    <h1>"Errors"</h1>
+                    {move || {
+                        errors()
+                            .into_iter()
+                            .map(|error| {
+                                view! { <p>"Error: " {error.1.to_string()}</p> }
+                            })
+                            .collect::<Vec<_>>()
+                    }}
+                }
+            }>
+            {contents}
+            </ErrorBoundary>
+        </Transition>
         </main>
+        <Footer />
         </div>
     }
 }
