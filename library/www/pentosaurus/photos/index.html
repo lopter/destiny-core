@@ -17,11 +17,13 @@
         <ul>
           <li><a href="/">Infos</a></li>
           <li><a href="/photos/"><u>Photos</u></a></li>
-          <!--<li><a href="/pento/">Pento</a></li>-->
+          <li><a href="/residents/">Résidents</a></li>
         </ul>
       </nav>
       <div class="viewer">
-        <p>⟨</p>
+        <div class="viewer-control">
+          <p>⟨</p>
+        </div>
         <!-- NOTE:
 
         - Make sure the `gallery_index` var in `photos.mjs` matches this image;
@@ -33,7 +35,9 @@
           <source media="(min-width: 666px), (min-height: 1000px)" srcset="https://pentosaurus-assets.fly.storage.tigris.dev/photos/fullsize-15/full.jpg">
           <img id="initial-photo" src="https://pentosaurus-assets.fly.storage.tigris.dev/photos/fullsize-15/half.jpg">
         </picture>
-        <p>⟩</p>
+        <div class="viewer-control">
+          <p>⟩</p>
+        </div>
       </div>
       <div class="gallery">
       </div>

@@ -42,7 +42,7 @@ main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: start;
   flex-grow: 1;
 
   nav {
@@ -72,16 +72,20 @@ main {
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
-    justify-content: center;
 
     p {
       margin-bottom: 20px;
+      text-align: center;
     }
 
     @media (min-width: 500px) {
       p {
-        width: 500px;
+        width: 500px; /* See also width on div.logo & img below */
       }
+    }
+
+    a {
+      text-decoration: underline;
     }
   }
 
@@ -92,8 +96,15 @@ main {
     display: flex;
 
     img {
-      height: min(50vh, 1070px);
-      aspect-ratio: 1826 / 2140;
+      align-self: end;
+      aspect-ratio: 1950 / 1791;
+      @media (max-width: 499px) {
+        width: calc(100vw - 2 * var(--body-margin));
+      }
+      @media (min-width: 500px) {
+        max-height: min(50vh, 895px);
+        width: 500px; /* Same as the width for the text in div.infos */
+      }
     }
   }
 
@@ -123,25 +134,75 @@ main {
 
   div.viewer {
     align-self: center;
-    flex: 1 1 auto;
+
+    flex: 0 1 auto;
+    justify-content: center;
     align-items: center;
     display: flex;
     margin-bottom: 20px;
 
-    p {
-      font-size: xxx-large;
-      margin: 10px;
+    div.viewer-control {
+      height: 100%;
+      display: flex;
+      align-items: center;
       cursor: pointer;
+
+      p {
+        font-size: xxx-large;
+        margin: 20px;
+      }
+    }
+    div.viewer-control:hover {
+      background-color: #ffebeb;
+      transition-property: background-color, color;
+      transition-duration: 0.15s, 0.15s;
+      transition-timing-function: ease, ease;
+      transition-delay: 0s, 0s;
+      transition-behavior: normal, normal;
     }
 
     img {
       max-width: 80vw;
       max-height: 80vh;
+      display: block;
     }
 
     #initial-photo {
       width: min(80vw, calc(80vh * (1333 / 2000)));
       height: min(80vh, calc(80vw * (2000 / 1333)));
     }
-  };
+  }
+
+  div.residents {
+    display: flex;
+    flex-direction: column;
+
+    ul {
+      list-style-type: none;
+    }
+
+    img {
+      aspect-ratio: 998 / 239;
+      @media (max-width: 497px) {
+        width: calc(100vw - 2 * var(--body-margin));
+      }
+      @media (min-width: 498px) {
+        width: 498px; /* Same as the width for the text in div.infos */
+      }
+    }
+  }
+
+  div.meute {
+    align-self: flex-end;
+
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+
+    img {
+      aspect-ratio: 3119 / 1752;
+      width: min(calc(100vw - 2 * var(--body-margin)), 800px);
+    }
+  }
 }

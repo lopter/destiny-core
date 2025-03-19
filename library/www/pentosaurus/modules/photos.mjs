@@ -47,8 +47,8 @@ loadManifest()
       console.error("viewer not found");
       return;
     }
-    const left_arrow = viewer.querySelector("p:nth-of-type(1)");
-    const right_arrow = viewer.querySelector("p:nth-of-type(2)");
+    const left_arrow = viewer.querySelector("div:nth-of-type(1)");
+    const right_arrow = viewer.querySelector("div:nth-of-type(2)");
     if (!left_arrow || !right_arrow) {
       console.error("viewer control arrows not found");
       return;
@@ -65,10 +65,11 @@ loadManifest()
     var touch_start_x = 0;
     var is_zooming = false;
     const swipe_threshold = 50; // Minimum horizontal distance (in pixels) to consider it a swipe
+    const passive_event_listener = {passive: true};
     viewer.addEventListener("touchstart", (event) => {
       is_zooming = event.touches.length > 1;
       touch_start_x = event.changedTouches[0].screenX;
-    });
+    }, passive_event_listener);
     viewer.addEventListener("touchend", (event) => {
       if (is_zooming || event.changedTouches.length > 1) {
         return;
@@ -86,7 +87,7 @@ loadManifest()
         gallery_index = decrIndex(manifest, gallery_index);
       }
       updateViewer(viewer, manifest.images[gallery_index]);
-    });
+    }, passive_event_listener);
 
     document.addEventListener("keydown", (event) => {
       // Check if no input or textarea is focused to avoid interfering with typing.
