@@ -94,8 +94,13 @@ class Config:
 
     @classmethod
     def load(cls, filename: Path) -> Config:
-        with filename.open('r') as file:
+        with filename.open("r") as file:
             data = json.load(file)
+
+        # TODO: checks that data is a dict and that the restic and jobsByName
+        # keys are present.
+
+        restic_b2_job_count = 0
         jobs_by_name: dict[str, BackupJob] = {}
         for job_name, job_data in data["jobsByName"].items():
             job_args: dict[str, Any] = {}
@@ -128,21 +133,27 @@ class Config:
             else:
                 job_args["password_path"] = None
             job_args["retention"] = job_data.get("retention")
-            jobs_by_name[job_name] = BackupJob(**job_args)
-        b2_details = data["restic"]["b2"]
-        b2_key_id = Path(b2_details["keyIdPath"]).read_text().strip()
-        b2_app_id = Path(b2_details["applicationKeyPath"]).read_text().strip()
-        cfg = cls(
-            jobs_by_name,
-            Restic(
-                cache_dir=Path(data["restic"]["cacheDir"]),
-                b2=B2(
-                    bucket=b2_details["bucket"],
-                    key_id=b2_key_id,
-                    application_key=b2_app_id,
-                ),
-            ),
+            backup_job = BackupJob(**job_args)
+            restic_b2_job_count += int(backup_job.type == BackupType.RESTIC_B2)
+            jobs_by_name[job_name] = backup_job
+        b2_cfg = B2(bucket="n/a", key_id="n/a", application_key="n/a")
+        restic_cfg = Restic(
+            cache_dir=Path(),
+            b2=b2_cfg,
         )
+        if restic_b2_job_count:
+            b2_details = data["restic"].get("b2")
+            if not isinstance(b2_details, dict):
+                raise ValueError(
+                    f"{restic_b2_job_count} restic_b2 jobs configured but b2 "
+                    f"credentials are missing in the configuration"
+                )
+            # TODO: Check that each key is present before unpacking it.
+            restic_cfg.cache_dir = Path(data["restic"]["cacheDir"])
+            b2_cfg.bucket = b2_details["bucket"]
+            b2_cfg.key_id = Path(b2_details["keyIdPath"]).read_text().strip()
+            b2_cfg.application_key = Path(b2_details["applicationKeyPath"]).read_text().strip()
+        cfg = cls(jobs_by_name, restic_cfg)
         cfg.validate()
         return cfg
 
