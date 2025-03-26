@@ -15,11 +15,10 @@ from collections.abc import Generator
 from pathlib import Path
 from typing import Any, Final, Iterator, cast, NamedTuple
 
-from . import pass_store, s3cmd
+from . import utils
 
 logger = logging.getLogger("pentosaurus")
 
-PASS_NAME: Final[str] = "com/ovh/pentosaurus@gmail.com"
 ZONE_NAME: Final[str] = "atelierpentosaurus.com"
 
 ZONE_RECORDS_ENDPOINT: Final[str] = f"/domain/zone/{ZONE_NAME}/record"
@@ -28,13 +27,11 @@ TTL: Final[int] = 60 * 15
 
 OVHRecord = dict[str, Any]
 
-# We could have an OVH sub-command on which to set this common option but this
-# will do for now to keep things somewhat DRY:
-pass_name_option = click.option(
-    "--pass-name",
-    default=PASS_NAME,
-    required=True,
-    show_default=True,
+# Maybe we could also have an utility to create some kind of utility to DRY
+# the OVH related code when if we need to manage another website the same way
+# as pentosaurus.
+pass_name_option = utils.pass_store.pass_name_option(
+    default="com/ovh/pentosaurus@gmail.com",
     help="Name of the password in pass with the OVH credentials",
 )
 
@@ -160,7 +157,7 @@ def dns_set(pass_name: str, a: str, aaaa: str) -> None:
 
 
 def new_ovh_client(pass_name: str) -> ovh.Client:
-    pass_contents = pass_store.show(pass_name)
+    pass_contents = utils.pass_store.show(pass_name)
     credentials = yaml.safe_load(pass_contents)["certbot_api_keys"]
     return ovh.Client(endpoint="ovh-eu", **credentials)
 
@@ -328,7 +325,7 @@ def upload(
         local_dir.rename(want_dir)
         local_dir = want_dir
 
-    s3cmd.sync(s3_config, local_dir, bucket, remote_prefix)
+    utils.s3cmd.sync(s3_config, local_dir, bucket, remote_prefix)
 
     click.echo(f"""{local_dir} has been uploaded.
 
@@ -364,17 +361,17 @@ def delete(
         ctx.exit(1)
 
     if click.confirm(f"Recursively delete {remote_path} from {bucket}?"):
-        s3cmd.delete(s3_config, bucket, remote_path)
+        utils.s3cmd.delete(s3_config, bucket, remote_path)
 
 
-def get_s3_config(pass_name: str) -> s3cmd.Config | None:
-    pass_contents = pass_store.show(pass_name)
+def get_s3_config(pass_name: str) -> utils.s3cmd.Config | None:
+    pass_contents = utils.pass_store.show(pass_name)
     match credentials := yaml.safe_load(pass_contents):
         case {
             "AWS_ACCESS_KEY_ID": access_key,
             "AWS_SECRET_ACCESS_KEY": secret_key,
         }:
-            return s3cmd.Config(access_key, secret_key, BUCKET_HOST_BASE)
+            return utils.s3cmd.Config(access_key, secret_key, BUCKET_HOST_BASE)
         case _:
             if not isinstance(credentials, dict):
                 logger.info(f"Expected to find a dict in pass but got a {type(credentials)}")

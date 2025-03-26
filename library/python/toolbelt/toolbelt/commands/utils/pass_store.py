@@ -1,5 +1,15 @@
+import click
+import functools
 import logging
 import subprocess
+
+pass_name_option = functools.partial(
+    click.option,
+    "--pass-name",
+    required=True,
+    show_default=True,
+    help=help,
+)
 
 
 def show(path: str) -> str:

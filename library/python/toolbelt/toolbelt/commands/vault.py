@@ -11,7 +11,7 @@ import tempfile
 from pathlib import Path
 from typing import Any, Optional
 
-from . import clan, pass_store
+from . import utils
 
 
 @click.group(help="Hashicorp's Vault ops")
@@ -60,7 +60,7 @@ setting.
     required=True,
     show_default=True,
 )
-@clan.ensure_root_directory
+@utils.clan.ensure_root_directory
 def rotate_ca_cert(
     common_name: str,
     country: Optional[str],
@@ -105,12 +105,12 @@ def rotate_ca_cert(
     )
     ca = json.loads(genkey.stdout)
 
-    clan.vars_set(machine, {"clan-destiny-vault-common/tlsCaCert": ca["cert"]})
+    utils.clan.vars_set(machine, {"clan-destiny-vault-common/tlsCaCert": ca["cert"]})
 
     name = "tls_ca_key"
     dest = os.path.join(pass_dir, name)
     logging.info(f"Saving TLS CA key in pass with name {dest}")
-    pass_store.set(dest, ca["key"])
+    utils.utils.pass_store.set(dest, ca["key"])
 
     logging.info(
         "Successfully rotated Vault CA Cert, "
@@ -153,7 +153,7 @@ TLS CA key is read from the secret `tls_ca_key` in the directory given by
     required=True,
     show_default=True,
 )
-@clan.ensure_root_directory
+@utils.clan.ensure_root_directory
 def rotate_server_cert(
     common_name: str,
     country: Optional[str],
@@ -167,8 +167,8 @@ def rotate_server_cert(
     pass_dir: str,
 ) -> None:
     name = "clan-destiny-vault-common/tlsCaCert"
-    ca_cert = clan.vars_get(machine, [name])[name]
-    ca_key = pass_store.show(os.path.join(pass_dir, "tls_ca_key"))
+    ca_cert = utils.clan.vars_get(machine, [name])[name]
+    ca_key = utils.pass_store.show(os.path.join(pass_dir, "tls_ca_key"))
 
     cert_profile_name = "vault-server"
     cfssl_config = {
@@ -254,7 +254,7 @@ def rotate_server_cert(
         "clan-destiny-vault/tlsKey": cert["key"],
         "clan-destiny-vault/tlsCertChain": tls_cert_chain,
     }
-    clan.vars_set(machine, secrets)
+    utils.clan.vars_set(machine, secrets)
 
 
 @vault.command(
@@ -307,7 +307,7 @@ def init(pass_dir: str) -> None:
         ("unseal_key", unseal_key),
         ("root_token", root_token),
     ):
-        pass_store.set(os.path.join(pass_dir, name), secret)
+        utils.pass_store.set(os.path.join(pass_dir, name), secret)
 
     _unseal(unseal_key)
 
@@ -329,7 +329,7 @@ def init(pass_dir: str) -> None:
     show_default=True,
 )
 def unseal(pass_dir: str) -> None:
-    _unseal(pass_store.show(os.path.join(pass_dir, "unseal_key")))
+    _unseal(utils.pass_store.show(os.path.join(pass_dir, "unseal_key")))
 
 
 def _unseal(unseal_key: str) -> None:
@@ -382,7 +382,7 @@ The following clan vars will be set for the given machine and var generator:
     ),
     required=True,
 )
-@clan.ensure_root_directory
+@utils.clan.ensure_root_directory
 def rotate_approle(
     role: str,
     vault_root_token_pass_name: str,
@@ -401,7 +401,7 @@ def rotate_approle(
             sys.exit(1)
 
     vault_env = os.environ.copy()
-    vault_env["VAULT_TOKEN"] = pass_store.show(vault_root_token_pass_name)
+    vault_env["VAULT_TOKEN"] = utils.pass_store.show(vault_root_token_pass_name)
     vault_call = functools.partial(
         subprocess.run,
         check=True,
@@ -453,7 +453,7 @@ def rotate_approle(
         f"{vars_generator}/vaultRoleId": role_id,
         f"{vars_generator}/vaultSecretId": secret_id,
     }
-    clan.vars_set(machine, vars)
+    utils.clan.vars_set(machine, vars)
 
     logging.info(f"Calling vault policy to create policy {vault_policy_name}")
     cmd = ["vault", "policy", "write", vault_policy_name, str(vault_policy_path)]

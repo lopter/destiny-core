@@ -1,10 +1,7 @@
 import click
 import logging
 
-from . import (
-    pentosaurus,
-    vault,
-)
+from . import commands
 
 
 @click.group(help="Toolbelt for clan-destiny")
@@ -17,5 +14,6 @@ def main(_: click.Context) -> None:
     )
 
 
-main.add_command(pentosaurus.pentosaurus)
-main.add_command(vault.vault)
+main.add_command(commands.pentosaurus)
+main.add_command(commands.pikvm)
+main.add_command(commands.vault)
