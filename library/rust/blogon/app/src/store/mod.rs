@@ -32,6 +32,18 @@ impl Store {
                 error,
                 path: self.path.clone(),
             })?;
+            if let Some(file_name) = entry.file_name().to_str() {
+                let leading_digits = file_name
+                    .chars()
+                    .take_while(|c| c.is_digit(10))
+                    .count();
+                if leading_digits < 4 || !file_name.ends_with(".md") {
+                    continue;
+                }
+            } else {
+                log::warn!("Invalid utf-8 filename in the store: {:?}", entry.file_name());
+                continue;
+            }
             let path = if metadata.file_type().is_dir() {
                 let mut path = entry.path();
                 path.push("post.md");

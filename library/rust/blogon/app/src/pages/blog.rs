@@ -46,11 +46,10 @@ pub fn Index() -> impl IntoView {
     };
 
     view! {
-        <Title text="Blog Index" />
-        <div class="body-inner">
+        <Title text="Blog index" />
         <NavBar />
         <main class="blog-index">
-        <h1>Index</h1>
+        <h1>Blog index</h1>
         <nav>
         <Transition fallback=move || view! { "Loading…" }>
             <ErrorBoundary fallback=move |errors| {
@@ -74,7 +73,6 @@ pub fn Index() -> impl IntoView {
         </nav>
         </main>
         <Footer />
-        </div>
     }
 }
 
@@ -135,7 +133,6 @@ pub fn Post() -> impl IntoView {
 
     view! {
         <Title text="Blog Post" />
-        <div class="body-inner">
         <NavBar />
         <main class="blog-post">
         <Transition fallback=move || view! { "Loading…" }>
@@ -157,7 +154,6 @@ pub fn Post() -> impl IntoView {
         </Transition>
         </main>
         <Footer />
-        </div>
     }
 }
 

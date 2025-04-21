@@ -63,6 +63,11 @@ pub fn App() -> impl IntoView {
                     ssr=SsrMode::Async
                 />
                 <Route
+                    path=StaticSegment("about")
+                    view=pages::about::Index
+                    ssr=SsrMode::PartiallyBlocked
+                />
+                <Route
                     path=StaticSegment("blog")
                     view=pages::blog::Index
                     ssr=SsrMode::PartiallyBlocked
