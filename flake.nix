@@ -5,6 +5,7 @@
     clan-core.url = "git+https://git.clan.lol/clan/clan-core";
     # clan-core.url = "git+file:///stash/home/kal/cu/src/nix/clan-core";
     clan-core.inputs.nixpkgs.follows = "nixpkgs";
+    clan-core.inputs.flake-parts.follows = "flake-parts";
 
     flake-parts.url = "github:hercules-ci/flake-parts";
     flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs";
