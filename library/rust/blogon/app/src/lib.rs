@@ -17,6 +17,7 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
                 <meta charset="utf-8"/>
                 <meta name="viewport" content="width=device-width, initial-scale=1"/>
                 <meta name="description" content="Hello, I am Louis Opter, a generalist software engineer with an eye for: distributed systems, build systems (Nix, Bazel), self-hosting. Proficient in Python, Golang, and C. AKA, kalessin, lopter."/>
+                <meta http-equiv="content-security-policy" content="default-src 'none'; connect-src 'self'; font-src 'self'; img-src 'self' https://blogon-assets.fly.storage.tigris.dev/; script-src 'self'; style-src 'self'"/>
                 <AutoReload options=options.clone() />
                 <HydrationScripts options/>
                 <MetaTags/>
