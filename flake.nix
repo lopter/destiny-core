@@ -126,10 +126,9 @@
               hostRustComponents ++ pkgs.lib.optionals withWasm32 [ wasmRustToolchain.rust-std ]
             );
           _module.args.setupCraneLib =
-            { nightly, withWasm32 }:
+            { rustToolchain }:
             let
               craneLib = inputs.crane.mkLib pkgs;
-              rustToolchain = setupRustToolchain { inherit nightly withWasm32; };
             in
             (craneLib.overrideToolchain rustToolchain).overrideScope (
               _final: _prev: {
