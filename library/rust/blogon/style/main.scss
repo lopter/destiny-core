@@ -190,6 +190,10 @@ main.blog-index {
 main.blog-post {
   font-family: "Merriweather", serif;
 
+  > h1 {
+    align-self: flex-start;
+  }
+
   div.footnote-definition {
     p {
       display: inline;
