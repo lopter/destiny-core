@@ -3,6 +3,8 @@ import functools
 import logging
 import subprocess
 
+logger = logging.getLogger("utils.pass-store")
+
 pass_name_option = functools.partial(
     click.option,
     "--pass-name",

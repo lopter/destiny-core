@@ -14,6 +14,7 @@ def main(_: click.Context) -> None:
     )
 
 
+main.add_command(commands.blogon)
 main.add_command(commands.pentosaurus)
 main.add_command(commands.pikvm)
 main.add_command(commands.vault)
