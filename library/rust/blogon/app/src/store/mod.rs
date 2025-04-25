@@ -51,7 +51,11 @@ impl Store {
             } else {
                 entry.path()
             };
-            index.push(FrontMatter::read(&path)?);
+            // TODO: Filter unpublished post in prod only:
+            let front_matter = FrontMatter::read(&path)?;
+            if front_matter.metadata.date.is_some() {
+                index.push(front_matter);
+            }
         }
         Ok(index)
     }
