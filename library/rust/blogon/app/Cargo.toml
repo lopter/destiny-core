@@ -22,6 +22,9 @@ serde_yml.workspace = true
 slug.workspace = true
 thiserror.workspace = true
 
+# feature JS is required on this transitive dependency to use `use_nonce`.
+getrandom = { version = "0.2", features = ["js"] }
+
 [features]
 default = []
 hydrate = ["leptos/hydrate"]

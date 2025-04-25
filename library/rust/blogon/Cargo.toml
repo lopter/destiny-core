@@ -7,10 +7,10 @@ axum = "0.7"
 cfg-if = "1"
 console_error_panic_hook = "0.1"
 console_log = "1"
-leptos = { version = "0.7.0", features = ["nightly"] }
-leptos_axum = { version = "0.7.0" }
-leptos_meta = { version = "0.7.0" }
-leptos_router = { version = "0.7.0", features = ["nightly"] }
+leptos = { version = "0.7", features = ["nightly", "nonce"] }
+leptos_axum = { version = "0.7" }
+leptos_meta = { version = "0.7" }
+leptos_router = { version = "0.7", features = ["nightly"] }
 tokio = { version = "1", features = ["rt-multi-thread"] }
 tower = { version = "0.5" }
 tower-http = { version = "0.6", features = ["fs"] }
