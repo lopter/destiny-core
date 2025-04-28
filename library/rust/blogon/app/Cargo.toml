@@ -16,13 +16,14 @@ cfg-if.workspace = true
 chrono.workspace = true
 http.workspace = true
 log.workspace = true
-pulldown-cmark.workspace = true
+pulldown-cmark = { workspace = true, optional = true }
 serde.workspace = true
 serde_yml.workspace = true
-slug.workspace = true
+slug = { workspace = true, optional = true }
 thiserror.workspace = true
 
-# feature JS is required on this transitive dependency to use `use_nonce`.
+# Feature JS is required on this transitive dependency for
+# `leptos::nonce::use_nonce`:
 getrandom = { version = "0.2", features = ["js"] }
 
 [features]
@@ -33,4 +34,6 @@ ssr = [
     "leptos_meta/ssr",
     "leptos_router/ssr",
     "dep:leptos_axum",
+    "dep:pulldown-cmark",
+    "dep:slug",
 ]

@@ -522,25 +522,25 @@
     "rust-manifest": {
       "flake": false,
       "locked": {
-        "narHash": "sha256-Yqu2/i9170R7pQhvOCR1f5SyFr7PcFbO6xcMr9KWruQ=",
+        "narHash": "sha256-MnExpHCcKv4vc2gwfNF7RAv6WPf11ingHvlw5o08wyE=",
         "type": "file",
-        "url": "https://static.rust-lang.org/dist/2024-11-28/channel-rust-stable.toml"
+        "url": "https://static.rust-lang.org/dist/2025-04-03/channel-rust-stable.toml"
       },
       "original": {
         "type": "file",
-        "url": "https://static.rust-lang.org/dist/2024-11-28/channel-rust-stable.toml"
+        "url": "https://static.rust-lang.org/dist/2025-04-03/channel-rust-stable.toml"
       }
     },
     "rust-manifest-nightly": {
       "flake": false,
       "locked": {
-        "narHash": "sha256-vhPr4c4sjLFE0PVlDpDR+2iFOAP8Zivjsqa1zn9hA40=",
+        "narHash": "sha256-nouyq0qEJEmOl0G0QtRdGa+XwIhJrc95rPU4xXHASRQ=",
         "type": "file",
-        "url": "https://static.rust-lang.org/dist/2024-12-02/channel-rust-nightly.toml"
+        "url": "https://static.rust-lang.org/dist/2025-04-28/channel-rust-nightly.toml"
       },
       "original": {
         "type": "file",
-        "url": "https://static.rust-lang.org/dist/2024-12-02/channel-rust-nightly.toml"
+        "url": "https://static.rust-lang.org/dist/2025-04-28/channel-rust-nightly.toml"
       }
     },
     "sops-nix": {

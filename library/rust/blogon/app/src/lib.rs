@@ -69,14 +69,11 @@ pub fn App() -> impl IntoView {
         // content for this welcome page
         <Router>
             <Routes fallback=|| "Page not found.".into_view()>
-                // Let's use async rendering so that we fully render on the server since this
-                // is really static content. However, this will suck if we ever add comments,
-                // since we'll want to actually load those asynchronously.
-                // My understanding is that SsrMode::PartiallyBlocked & Resource::new_blocking
-                // should address that, but it does not seem to work.
                 <Route
                     path=StaticSegment("")
                     view=pages::home::Index
+                    // Let's use async rendering so that we fully render
+                    // on the server since this is really static content.
                     ssr=SsrMode::Async
                 />
                 <Route

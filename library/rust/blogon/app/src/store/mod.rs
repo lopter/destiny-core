@@ -12,6 +12,7 @@ pub struct Store {
     path: PathBuf,
 }
 
+#[cfg(feature = "ssr")]
 impl Store {
     pub fn open(path: PathBuf) -> Self {
         Store { path }

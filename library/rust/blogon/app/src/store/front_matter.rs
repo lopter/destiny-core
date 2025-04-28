@@ -1,5 +1,7 @@
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+#[cfg(feature = "ssr")]
 use std::io::prelude::*;
+#[cfg(feature = "ssr")]
 use std::path::{Path, PathBuf};
 
 use crate::store::{Error, Result};
@@ -50,6 +52,7 @@ where
     serializer.serialize_str(s.as_str())
 }
 
+#[cfg(feature = "ssr")]
 impl FrontMatter {
     /// Extract the front matter and deserialize with yaml.
     /// The file cursor is moved after the front matter.

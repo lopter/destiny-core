@@ -23,15 +23,15 @@
     fenix.inputs.nixpkgs.follows = "nixpkgs";
     fenix.inputs.rust-analyzer-src.follows = "";
     rust-manifest = {
-      # Rust 1.83.0
+      # Rust 1.86.0
       type = "file";
-      url = "https://static.rust-lang.org/dist/2024-11-28/channel-rust-stable.toml";
+      url = "https://static.rust-lang.org/dist/2025-04-03/channel-rust-stable.toml";
       flake = false;
     };
     rust-manifest-nightly = {
-      # Rust 1.85.0-nightly
+      # Rust 1.87.0-nightly
       type = "file";
-      url = "https://static.rust-lang.org/dist/2024-12-02/channel-rust-nightly.toml";
+      url = "https://static.rust-lang.org/dist/2025-04-28/channel-rust-nightly.toml";
       flake = false;
     };
     crane.url = "github:ipetkov/crane";

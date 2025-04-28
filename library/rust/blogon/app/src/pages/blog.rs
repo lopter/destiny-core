@@ -2,6 +2,7 @@ use anyhow::Result;
 use leptos::prelude::*;
 use leptos_meta::Title;
 use leptos_router::components::A;
+#[cfg(feature = "ssr")]
 use std::path::PathBuf;
 
 use crate::components::{Footer, NavBar};

@@ -1,11 +1,75 @@
+#[cfg(feature = "ssr")]
 use pulldown_cmark::{Event, Tag, TagEnd};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::io::prelude::*;
+#[cfg(feature = "ssr")]
+use std::io::Read;
+use std::fmt::Display;
+#[cfg(feature = "ssr")]
 use std::path::{Path, PathBuf};
 
 use crate::store::{Error, FrontMatter, Result};
 
-pub use pulldown_cmark::HeadingLevel;
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+#[derive(Serialize, Deserialize)]
+pub enum HeadingLevel {
+    H1 = 1,
+    H2 = 2,
+    H3 = 3,
+    H4 = 4,
+    H5 = 5,
+    H6 = 6,
+}
+
+impl Display for HeadingLevel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::H1 => write!(f, "h1"),
+            Self::H2 => write!(f, "h2"),
+            Self::H3 => write!(f, "h3"),
+            Self::H4 => write!(f, "h4"),
+            Self::H5 => write!(f, "h5"),
+            Self::H6 => write!(f, "h6"),
+        }
+    }
+}
+
+/// Returned when trying to convert a `usize` into a `Heading` but it fails
+/// because the usize isn't a valid heading level
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+pub struct InvalidHeadingLevel(usize);
+
+impl TryFrom<usize> for HeadingLevel {
+    type Error = InvalidHeadingLevel;
+
+    fn try_from(value: usize) -> std::result::Result<Self, Self::Error> {
+        match value {
+            1 => Ok(Self::H1),
+            2 => Ok(Self::H2),
+            3 => Ok(Self::H3),
+            4 => Ok(Self::H4),
+            5 => Ok(Self::H5),
+            6 => Ok(Self::H6),
+            _ => Err(InvalidHeadingLevel(value)),
+        }
+    }
+}
+
+#[cfg(feature = "ssr")]
+impl TryFrom<pulldown_cmark::HeadingLevel> for HeadingLevel {
+    type Error = InvalidHeadingLevel;
+
+    fn try_from(value: pulldown_cmark::HeadingLevel) -> std::result::Result<Self, Self::Error> {
+        match value {
+            pulldown_cmark::HeadingLevel::H1 => Ok(Self::H1),
+            pulldown_cmark::HeadingLevel::H2 => Ok(Self::H2),
+            pulldown_cmark::HeadingLevel::H3 => Ok(Self::H3),
+            pulldown_cmark::HeadingLevel::H4 => Ok(Self::H4),
+            pulldown_cmark::HeadingLevel::H5 => Ok(Self::H5),
+            pulldown_cmark::HeadingLevel::H6 => Ok(Self::H6),
+            _ => Err(InvalidHeadingLevel(value as usize)),
+        }
+    }
+}
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct Post {
@@ -44,6 +108,7 @@ impl std::fmt::Debug for Heading {
     }
 }
 
+#[cfg(feature = "ssr")]
 impl Heading {
     pub fn html_id(&self) -> String {
         slug::slugify(format!("{:?}", self).as_str())
@@ -73,6 +138,7 @@ where
     serializer.serialize_u8(*level as u8)
 }
 
+#[cfg(feature = "ssr")]
 pub fn render(path: &Path) -> Result<Post> {
     let (contents, front_matter) = {
         // Even though this code should only be executed server side I am not able to pull
@@ -129,8 +195,8 @@ pub fn render(path: &Path) -> Result<Post> {
                     assert!(heading_path[path_index] < u16::MAX);
                     heading_path[path_index] += 1;
                     toc.push(Heading {
-                        name,
-                        level,
+                        name: name,
+                        level: HeadingLevel::try_from(level).unwrap(),
                         path: heading_path,
                     });
                 }
@@ -169,6 +235,7 @@ pub fn render(path: &Path) -> Result<Post> {
     })
 }
 
+#[cfg(feature = "ssr")]
 fn heading_events_to_heading_name(events: &Vec<Event>) -> String {
     events
         .into_iter()
@@ -194,6 +261,7 @@ fn heading_events_to_heading_name(events: &Vec<Event>) -> String {
         .join(" ")
 }
 
+#[cfg(feature = "ssr")]
 fn add_section_ids<'input>(events: Vec<Event<'input>>, toc: &Vec<Heading>) -> Vec<Event<'input>> {
     use pulldown_cmark::CowStr;
 
