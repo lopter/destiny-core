@@ -2,10 +2,12 @@ pub mod errors;
 mod front_matter;
 mod post;
 
+#[cfg(feature = "ssr")]
 pub use errors::{Error, Result};
 pub use front_matter::FrontMatter;
 pub use post::Post;
 
+#[cfg(feature = "ssr")]
 pub struct Store {
     path: std::path::PathBuf,
 }

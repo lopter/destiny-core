@@ -7,7 +7,9 @@ use std::fmt::Display;
 #[cfg(feature = "ssr")]
 use std::path::{Path, PathBuf};
 
-use crate::store::{Error, FrontMatter, Result};
+#[cfg(feature = "ssr")]
+use crate::store::{Error, Result};
+use crate::store::FrontMatter;
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 #[derive(Serialize, Deserialize)]

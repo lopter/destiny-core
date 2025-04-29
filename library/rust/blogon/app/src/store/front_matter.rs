@@ -4,6 +4,7 @@ use std::io::prelude::*;
 #[cfg(feature = "ssr")]
 use std::path::{Path, PathBuf};
 
+#[cfg(feature = "ssr")]
 use crate::store::{Error, Result};
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
