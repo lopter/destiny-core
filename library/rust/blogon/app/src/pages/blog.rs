@@ -2,8 +2,6 @@ use anyhow::Result;
 use leptos::prelude::*;
 use leptos_meta::Title;
 use leptos_router::components::A;
-#[cfg(feature = "ssr")]
-use std::path::PathBuf;
 
 use crate::components::{Footer, NavBar};
 use crate::store;
@@ -98,8 +96,7 @@ pub fn PostDetails(slug: String, title: String, date: String, tags: Vec<String>)
 
 #[server(GetStoreIndex, "/blog", "GetJson", "index")]
 pub async fn get_store_index() -> Result<Vec<store::FrontMatter>, ServerFnError> {
-    let path = PathBuf::from(env!("BLOGON_BLOG_STORE_PATH"));
-    let store = store::Store::open(path);
+    let store = store::Store::open();
     store
         .index()
         .map_err(|e| ServerFnError::ServerError(e.to_string()))
@@ -161,8 +158,7 @@ pub fn Post() -> impl IntoView {
 #[server(GetPostBySlug, "/blog", "GetJson", "post")]
 pub async fn get_post_by_slug(slug: String) -> Result<store::Post, ServerFnError> {
     // TODO: voir comment avoir store dans une sorte de contexte
-    let path = PathBuf::from(env!("BLOGON_BLOG_STORE_PATH"));
-    let store = store::Store::open(path);
+    let store = store::Store::open();
     store
         .get_post_by_slug(&slug)
         .map_err(|e| ServerFnError::ServerError(e.to_string()))

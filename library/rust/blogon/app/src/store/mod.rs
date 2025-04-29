@@ -1,5 +1,3 @@
-use std::path::{Path, PathBuf};
-
 pub mod errors;
 mod front_matter;
 mod post;
@@ -9,13 +7,13 @@ pub use front_matter::FrontMatter;
 pub use post::Post;
 
 pub struct Store {
-    path: PathBuf,
+    path: std::path::PathBuf,
 }
 
 #[cfg(feature = "ssr")]
 impl Store {
-    pub fn open(path: PathBuf) -> Self {
-        Store { path }
+    pub fn open() -> Self {
+        Store { path: std::path::PathBuf::from(env!("BLOGON_BLOG_STORE_PATH")) }
     }
 
     pub fn index(&self) -> Result<Vec<FrontMatter>> {
@@ -76,8 +74,8 @@ impl Store {
             })?;
         let post_name = parts.collect::<Vec<&str>>().join("_");
         let file_name = format!("{number:04}_{post_name}.md");
-        let parts = [self.path.as_path(), Path::new(file_name.as_str())];
-        let file_path: PathBuf = parts.iter().collect();
+        let parts = [self.path.as_path(), std::path::Path::new(file_name.as_str())];
+        let file_path: std::path::PathBuf = parts.iter().collect();
         log::info!("slug \"{}\" points to file \"{}\"", slug, file_name);
         post::render(&file_path)
     }
