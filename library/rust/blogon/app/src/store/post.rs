@@ -55,18 +55,15 @@ impl TryFrom<usize> for HeadingLevel {
 }
 
 #[cfg(feature = "ssr")]
-impl TryFrom<pulldown_cmark::HeadingLevel> for HeadingLevel {
-    type Error = InvalidHeadingLevel;
-
-    fn try_from(value: pulldown_cmark::HeadingLevel) -> std::result::Result<Self, Self::Error> {
+impl From<pulldown_cmark::HeadingLevel> for HeadingLevel {
+    fn from(value: pulldown_cmark::HeadingLevel) -> Self {
         match value {
-            pulldown_cmark::HeadingLevel::H1 => Ok(Self::H1),
-            pulldown_cmark::HeadingLevel::H2 => Ok(Self::H2),
-            pulldown_cmark::HeadingLevel::H3 => Ok(Self::H3),
-            pulldown_cmark::HeadingLevel::H4 => Ok(Self::H4),
-            pulldown_cmark::HeadingLevel::H5 => Ok(Self::H5),
-            pulldown_cmark::HeadingLevel::H6 => Ok(Self::H6),
-            _ => Err(InvalidHeadingLevel(value as usize)),
+            pulldown_cmark::HeadingLevel::H1 => Self::H1,
+            pulldown_cmark::HeadingLevel::H2 => Self::H2,
+            pulldown_cmark::HeadingLevel::H3 => Self::H3,
+            pulldown_cmark::HeadingLevel::H4 => Self::H4,
+            pulldown_cmark::HeadingLevel::H5 => Self::H5,
+            pulldown_cmark::HeadingLevel::H6 => Self::H6,
         }
     }
 }
@@ -195,8 +192,8 @@ pub fn render(path: &Path) -> Result<Post> {
                     assert!(heading_path[path_index] < u16::MAX);
                     heading_path[path_index] += 1;
                     toc.push(Heading {
-                        name: name,
-                        level: HeadingLevel::try_from(level).unwrap(),
+                        name,
+                        level: HeadingLevel::from(level),
                         path: heading_path,
                     });
                 }
