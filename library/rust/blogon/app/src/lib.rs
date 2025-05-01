@@ -5,11 +5,14 @@ pub mod pages;
 pub mod store;
 
 use leptos::prelude::*;
+use leptos::nonce::use_nonce;
 use leptos_meta::{provide_meta_context, MetaTags, Stylesheet, Title};
 use leptos_router::{
     components::{Route, Router, Routes},
     ParamSegment, SsrMode, StaticSegment,
 };
+
+const WEBSITE_ID: &str = "b9663eae-790f-4252-9d3f-165f1efbf460";
 
 pub fn shell(options: LeptosOptions) -> impl IntoView {
     view! {
@@ -22,11 +25,11 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
                 <meta
                     http-equiv="content-security-policy"
                     content=move || {
-                        leptos::nonce::use_nonce()
+                        use_nonce()
                             .map(|nonce| {
                                 format!(
                                     "default-src 'none'; \
-                                    connect-src 'self'; \
+                                    connect-src 'self' https://api-gateway.umami.dev/; \
                                     font-src 'self'; \
                                     img-src 'self' https://blogon-assets.fly.storage.tigris.dev/; \
                                     script-src 'strict-dynamic' 'nonce-{nonce}' 'wasm-unsafe-eval'; \
@@ -36,6 +39,7 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
                             .unwrap_or_default()
                     }
                 />
+                <script defer src="/dramametry.js" data-website-id=WEBSITE_ID nonce=use_nonce()></script>
                 <AutoReload options=options.clone() />
                 <HydrationScripts options/>
                 <MetaTags/>
