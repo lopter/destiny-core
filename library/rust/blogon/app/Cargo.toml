@@ -18,14 +18,12 @@ http.workspace = true
 serde.workspace = true
 thiserror.workspace = true
 
+axum = { workspace = true, optional = true }
 log = { workspace = true, optional = true }
 pulldown-cmark = { workspace = true, optional = true }
 serde_yml = { workspace = true, optional = true }
 slug = { workspace = true, optional = true }
 
-# Feature JS is required on this transitive dependency for
-# `leptos::nonce::use_nonce`:
-getrandom = { version = "0.2", features = ["js"] }
 
 [features]
 default = []
@@ -34,6 +32,7 @@ ssr = [
     "leptos/ssr",
     "leptos_meta/ssr",
     "leptos_router/ssr",
+    "dep:axum",
     "dep:leptos_axum",
     "dep:log",
     "dep:pulldown-cmark",
