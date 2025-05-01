@@ -94,10 +94,9 @@ pub fn PostDetails(slug: String, title: String, date: String, tags: Vec<String>)
     }
 }
 
-#[server(GetStoreIndex, "/blog", "GetJson", "index")]
+#[server(GetStoreIndex, "/blog/api", "GetJson", "index")]
 pub async fn get_store_index() -> Result<Vec<store::FrontMatter>, ServerFnError> {
-    let store = store::Store::open();
-    store
+    expect_context::<store::Store>()
         .index()
         .map_err(|e| ServerFnError::ServerError(e.to_string()))
 }
@@ -155,11 +154,9 @@ pub fn Post() -> impl IntoView {
     }
 }
 
-#[server(GetPostBySlug, "/blog", "GetJson", "post")]
+#[server(GetPostBySlug, "/blog/api", "GetJson", "post")]
 pub async fn get_post_by_slug(slug: String) -> Result<store::Post, ServerFnError> {
-    // TODO: voir comment avoir store dans une sorte de contexte
-    let store = store::Store::open();
-    store
+    expect_context::<store::Store>()
         .get_post_by_slug(&slug)
         .map_err(|e| ServerFnError::ServerError(e.to_string()))
 }

@@ -1,4 +1,6 @@
 pub mod components;
+#[cfg(feature = "ssr")]
+pub mod context;
 pub mod pages;
 pub mod store;
 
@@ -55,7 +57,7 @@ pub fn App() -> impl IntoView {
     view! {
         // injects a stylesheet into the document <head>
         // id=leptos means cargo-leptos will hot-reload this stylesheet
-        <Stylesheet id="leptos" href="/pkg/blogon.css"/>
+        <Stylesheet id="leptos" href="/blog-pkg/blogon.css"/>
 
         // sets the document title
         <Title formatter=|text: String| {

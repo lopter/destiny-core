@@ -8,18 +8,24 @@ pub use front_matter::FrontMatter;
 pub use post::Post;
 
 #[cfg(feature = "ssr")]
+#[derive(Clone, Debug)]
 pub struct Store {
     path: std::path::PathBuf,
+    is_running_in_prod: bool,
 }
 
 #[cfg(feature = "ssr")]
 impl Store {
-    pub fn open() -> Self {
-        Store { path: std::path::PathBuf::from(env!("BLOGON_BLOG_STORE_PATH")) }
+    pub fn new(path: std::path::PathBuf, is_running_in_prod: bool) -> Self {
+        Self {
+            path,
+            is_running_in_prod,
+        }
     }
 
     pub fn index(&self) -> Result<Vec<FrontMatter>> {
         let mut index = vec![];
+
         let directory = self.path.read_dir().map_err(|error| Error::IO {
             error,
             path: self.path.clone(),
@@ -52,12 +58,22 @@ impl Store {
             } else {
                 entry.path()
             };
-            // TODO: Filter unpublished post in prod only:
             let front_matter = FrontMatter::read(&path)?;
-            if front_matter.metadata.date.is_some() {
+            if !self.is_running_in_prod || front_matter.metadata.date.is_some() {
                 index.push(front_matter);
             }
         }
+
+        index.sort_by(|lhs, rhs| {
+            use core::cmp::Ordering;
+            match (lhs.metadata.date, rhs.metadata.date) {
+                (Some(lhd), Some(rhd)) => lhd.cmp(&rhd),
+                (Some(_), None) => Ordering::Less,
+                (None, Some(_)) => Ordering::Greater,
+                (None, None) => lhs.slug.cmp(&rhs.slug),
+            }.reverse()
+        });
+
         Ok(index)
     }
 

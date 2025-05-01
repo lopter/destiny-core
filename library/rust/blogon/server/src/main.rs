@@ -1,8 +1,11 @@
+use leptos::prelude::*;
+
+use app::store;
+
+const LEPTOS_SERVER_URL_PATH: &str = "/blog/api/{*fn_name}";
+
 #[tokio::main]
 async fn main() {
-    use app::{shell, App};
-    use axum::Router;
-    use leptos::prelude::*;
     use leptos_axum::{generate_route_list, LeptosRoutes};
 
     env_logger::init();
@@ -10,16 +13,33 @@ async fn main() {
     let conf = get_configuration(None).unwrap();
     let addr = conf.leptos_options.site_addr;
     let leptos_options = conf.leptos_options;
+    let ctx = app::context::Context {
+        leptos_options: leptos_options.clone(),
+        store: store::Store::new(
+            std::path::PathBuf::from(env!("BLOGON_BLOG_STORE_PATH")),
+            leptos_options.env == Env::PROD,
+        ),
+    };
     // Generate the list of routes in your Leptos App
-    let routes = generate_route_list(App);
+    let routes = generate_route_list(app::App);
+    let ctx_fn = {
+        let ctx = ctx.clone();
+        move || provide_context(ctx.store.clone())
+    };
+    let app_fn = {
+        let ctx = ctx.clone();
+        move || app::shell(ctx.leptos_options.clone())
+    };
 
-    let app = Router::new()
-        .leptos_routes(&leptos_options, routes, {
-            let leptos_options = leptos_options.clone();
-            move || shell(leptos_options.clone())
-        })
-        .fallback(leptos_axum::file_and_error_handler(shell))
-        .with_state(leptos_options);
+    let leptos_server_fn_method_router =
+        axum::routing::get(leptos_server_fn_axum_handler)
+            .post(leptos_server_fn_axum_handler);
+    let app = axum::Router::new()
+        .route(LEPTOS_SERVER_URL_PATH, leptos_server_fn_method_router)
+        .leptos_routes_with_context(&ctx, routes, ctx_fn, app_fn)
+        // We could also pass the context to file_and_error_handler
+        .fallback(leptos_axum::file_and_error_handler::<app::context::Context, _>(app::shell))
+        .with_state(ctx);
 
     // run our app with hyper
     // `axum::Server` is a re-export of `hyper::Server`
@@ -28,4 +48,13 @@ async fn main() {
     axum::serve(listener, app.into_make_service())
         .await
         .unwrap();
+}
+
+async fn leptos_server_fn_axum_handler(
+    axum::extract::State(ctx): axum::extract::State<app::context::Context>,
+    request: axum::extract::Request<axum::body::Body>
+)  -> impl axum::response::IntoResponse {
+    let additional_context = move || { provide_context(ctx.store.clone()); };
+    leptos_axum::handle_server_fns_with_context(additional_context, request)
+        .await
 }
