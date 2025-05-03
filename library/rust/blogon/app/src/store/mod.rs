@@ -1,3 +1,4 @@
+#[cfg(feature = "ssr")]
 pub mod errors;
 mod front_matter;
 mod post;
@@ -97,4 +98,22 @@ impl Store {
         log::info!("slug \"{}\" points to file \"{}\"", slug, file_name);
         post::render(&file_path)
     }
+
+    /*
+    fn iter_posts(&self) -> ??? {
+        self.index().map(|index| {
+            index.into_iter()
+                .filter_map(|front_matter| {
+                    self.get_post_by_slug(front_matter.slug.as_str())
+                        .map_or_else(
+                            |post| Some(post),
+                            |error| {
+                                log::warn!("Could not iter post `{}`: `{:?}`", front_matter.slug, error);
+                                None
+                            },
+                        )
+                })
+        })
+    }
+    */
 }

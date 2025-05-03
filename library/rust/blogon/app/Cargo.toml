@@ -15,14 +15,13 @@ anyhow.workspace = true
 cfg-if.workspace = true
 chrono.workspace = true
 serde.workspace = true
-thiserror.workspace = true
 
 axum = { workspace = true, optional = true }
 log = { workspace = true, optional = true }
 pulldown-cmark = { workspace = true, optional = true }
 serde_yml = { workspace = true, optional = true }
 slug = { workspace = true, optional = true }
-
+thiserror = { workspace = true, optional = true }
 
 [features]
 default = []
@@ -37,4 +36,5 @@ ssr = [
     "dep:pulldown-cmark",
     "dep:serde_yml",
     "dep:slug",
+    "dep:thiserror",
 ]

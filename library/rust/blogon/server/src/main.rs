@@ -2,7 +2,9 @@ use leptos::prelude::*;
 
 use app::store;
 
-const LEPTOS_SERVER_URL_PATH: &str = "/blog/api/{*fn_name}";
+mod feeds;
+
+const LEPTOS_SERVER_FN_URL_PATH: &str = "/blog/api/{*fn_name}";
 
 #[tokio::main]
 async fn main() {
@@ -34,8 +36,12 @@ async fn main() {
     let leptos_server_fn_method_router =
         axum::routing::get(leptos_server_fn_axum_handler)
             .post(leptos_server_fn_axum_handler);
+    let json_feed_method_router = axum::routing::get(feeds::json::handler);
+    let rss_feed_method_router = axum::routing::get(feeds::rss::handler);
     let app = axum::Router::new()
-        .route(LEPTOS_SERVER_URL_PATH, leptos_server_fn_method_router)
+        .route(LEPTOS_SERVER_FN_URL_PATH, leptos_server_fn_method_router)
+        .route(feeds::json::URL_PATH, json_feed_method_router)
+        .route(feeds::rss::URL_PATH, rss_feed_method_router)
         .leptos_routes_with_context(&ctx, routes, ctx_fn, app_fn)
         // We could also pass the context to file_and_error_handler
         .fallback(leptos_axum::file_and_error_handler::<app::context::Context, _>(app::shell))
@@ -52,8 +58,8 @@ async fn main() {
 
 async fn leptos_server_fn_axum_handler(
     axum::extract::State(ctx): axum::extract::State<app::context::Context>,
-    request: axum::extract::Request<axum::body::Body>
-)  -> impl axum::response::IntoResponse {
+    request: axum::extract::Request<axum::body::Body>,
+) -> impl axum::response::IntoResponse {
     let additional_context = move || { provide_context(ctx.store.clone()); };
     leptos_axum::handle_server_fns_with_context(additional_context, request)
         .await
