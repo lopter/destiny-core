@@ -42,9 +42,8 @@ async fn main() {
         .route(LEPTOS_SERVER_FN_URL_PATH, leptos_server_fn_method_router)
         .route(&feeds::feed_path(feeds::json::FEED_NAME), json_feed_method_router)
         .route(&feeds::feed_path(feeds::rss::FEED_NAME), rss_feed_method_router)
-        .leptos_routes_with_context(&ctx, routes, ctx_fn, app_fn)
-        // We could also pass the context to file_and_error_handler
-        .fallback(leptos_axum::file_and_error_handler::<app::context::Context, _>(app::shell))
+        .leptos_routes_with_context(&ctx, routes, ctx_fn.clone(), app_fn)
+        .fallback(leptos_axum::file_and_error_handler_with_context::<app::context::Context, _>(ctx_fn, app::shell))
         .with_state(ctx);
 
     // run our app with hyper
