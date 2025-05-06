@@ -1,10 +1,12 @@
 use leptos::prelude::*;
+use leptos_meta::Title;
 
 use crate::components::NavBar;
 
 #[component]
 pub fn Index() -> impl IntoView {
     view! {
+        <Title text="" />
         <main class="home">
             <img
                 src="https://blogon-assets.fly.storage.tigris.dev/drawings/computer/half.webp"

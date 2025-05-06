@@ -63,7 +63,7 @@ pub fn Footer() -> impl IntoView {
                 </svg>
             </a>
             <p>
-                <A href="#top">{"\u{24d2}"}2025, Louis Opter (kalessin, lopter), text CC BY-SA 4.0, images all rights reserved {"\u{2191}"}</A>
+                <A href="#top">{"\u{24d2}"}2025, Louis Opter, text CC BY-SA 4.0, images all rights reserved, icons MIT License. {"\u{2191}"}</A>
             </p>
         </footer>
     }

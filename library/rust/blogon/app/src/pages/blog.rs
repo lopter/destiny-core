@@ -45,7 +45,7 @@ pub fn Index() -> impl IntoView {
     };
 
     view! {
-        <Title text="Blog index" />
+        <Title text="Blog" />
         <NavBar />
         <main class="blog-index">
         <h1>Blog index</h1>

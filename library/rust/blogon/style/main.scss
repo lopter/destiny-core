@@ -146,7 +146,9 @@ main {
   align-items: center;
   justify-content: center;
   font-size: large;
+}
 
+main, footer {
   @media (min-width: 1000px) {
     width: 50vw;
   }
@@ -185,12 +187,15 @@ main.home {
     font-size: x-large;
 
     @media (min-width: 700px) {
-      width: 100%;
+      width: 700px;
     }
     @media (max-width: 699px) {
       width: auto;
       > ul {
         flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        height: 25vh;
       }
     }
   }
@@ -225,6 +230,7 @@ main.blog-post {
 
 main.about {
   height: 100%;
+  align-items: normal;
 }
 
 div.tags-list > ul {

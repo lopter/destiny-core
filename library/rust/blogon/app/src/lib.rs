@@ -66,9 +66,9 @@ pub fn App() -> impl IntoView {
         // sets the document title
         <Title formatter=|text: String| {
             if text.is_empty() {
-                format!("Louis Opter (kalessin)")
+                format!("Louis Opter (kalessin, lopter)")
             } else {
-                format!("{} - Louis Opter (kalessin)", text)
+                format!("{} - Louis Opter (kalessin, lopter)", text)
             }
         }/>
 
