@@ -102,6 +102,11 @@ body > nav {
     padding: 0;
     margin: 0;
 
+    li {
+      display: flex;
+      align-items: center;
+    }
+
     li::after {
       content: "|";
       margin: 0 5px 0;
@@ -119,10 +124,20 @@ nav > ul {
   justify-content: space-around;
   list-style-type: none;
   padding: 0;
+
+  svg {
+    width: 1em;
+    aspect-ratio: 1;
+  }
 };
 
 ul {
   margin: 0;
+}
+
+.icon {
+  line-height: 0;
+  display: inline-block;
 }
 
 main {
@@ -167,8 +182,8 @@ main.home {
 
   nav {
     margin: 20px;
-
     font-size: x-large;
+
     @media (min-width: 700px) {
       width: 100%;
     }
@@ -233,20 +248,17 @@ div.tags-list > ul {
 footer {
   margin-top: auto;
   font-size: small;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
 
-  img {
-    display: inline;
-    aspect-ratio: 1;
+  svg {
     width: 1em;
     margin-right: 0.5ex;
-    filter: grayscale(100%);
-  };
+    aspect-ratio: 1;
+  }
 
-  img:hover {
-    filter: grayscale(0%);
-  };
-
-  > p a {
+  p a {
     color: var(--color-fg);
   }
 
