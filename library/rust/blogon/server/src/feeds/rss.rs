@@ -1,15 +1,15 @@
 use axum::response::IntoResponse;
 
 use super::metadata::{
-    BLOG_PATH,
     COPYRIGHT,
     DESCRIPTION,
     LANGUAGE,
     TITLE,
-    link,
+    blog_link,
+    feed_link,
 };
 
-pub const URL_PATH: &str = "/blog/feed.rss";
+pub const FEED_NAME: &str = "rss";
 
 pub async fn handler(
     axum::extract::State(ctx): axum::extract::State<app::context::Context>,
@@ -21,7 +21,7 @@ pub async fn handler(
         let slug = &front_matter.slug;
         let post = ctx.store.get_post_by_slug(slug)?;
         entry.set_title(front_matter.metadata.title.to_string());
-        entry.set_link(link(format!("{}/{}", BLOG_PATH, slug).as_str()));
+        entry.set_link(blog_link(Some(slug)));
         if let Some(date) = front_matter.metadata.date {
             entry.set_pub_date(date.format("%Y-%m-%d").to_string());
         }
@@ -36,7 +36,7 @@ pub async fn handler(
 
     let channel = rss::ChannelBuilder::default()
         .title(TITLE)
-        .link(link(BLOG_PATH))
+        .link(feed_link(FEED_NAME))
         .description(DESCRIPTION)
         .language(String::from(LANGUAGE))
         .copyright(String::from(COPYRIGHT))

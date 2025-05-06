@@ -18,6 +18,9 @@ pub fn Index() -> impl IntoView {
             <p>
                 r#"The artwork on this site is realized by "# <a href="https://www.atelierpentosaurus.com/">"Atelier Pentosaurus"</a> " resident Hugues Opter."
             </p>
+            <p>
+                r#"Images: ⓒ Louis Opter, All rights reserved. Text: ⓒ Louis Opter, CC BY-SA 4.0."#
+            </p>
         </main>
     }
 }

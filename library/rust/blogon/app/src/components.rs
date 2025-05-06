@@ -21,7 +21,9 @@ pub fn Footer() -> impl IntoView {
     view! {
         <footer>
             <p>
-                <a href="#top"><small>{"\u{24d2}"}2025, Louis Opter (kalessin, lopter), CC BY-SA 4.0 {"\u{2191}"}</small></a>
+                <a href="/blog/feed.rss" rel="external"><img src="/blog-icons/feed-rss.svg" alt="RSS Feed" /></a>
+                <a href="/blog/feed.json" rel="external"><img src="/blog-icons/feed-json.svg" alt="JSON Feed" /></a>
+                <A href="#top">{"\u{24d2}"}2025, Louis Opter (kalessin, lopter), text CC BY-SA 4.0, images all rights reserved {"\u{2191}"}</A>
             </p>
         </footer>
     }

@@ -1,4 +1,5 @@
 pub mod json;
+pub mod metadata;
 pub mod rss;
 
-mod metadata;
+pub use metadata::feed_path;

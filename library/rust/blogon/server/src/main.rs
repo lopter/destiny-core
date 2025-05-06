@@ -40,8 +40,8 @@ async fn main() {
     let rss_feed_method_router = axum::routing::get(feeds::rss::handler);
     let app = axum::Router::new()
         .route(LEPTOS_SERVER_FN_URL_PATH, leptos_server_fn_method_router)
-        .route(feeds::json::URL_PATH, json_feed_method_router)
-        .route(feeds::rss::URL_PATH, rss_feed_method_router)
+        .route(&feeds::feed_path(feeds::json::FEED_NAME), json_feed_method_router)
+        .route(&feeds::feed_path(feeds::rss::FEED_NAME), rss_feed_method_router)
         .leptos_routes_with_context(&ctx, routes, ctx_fn, app_fn)
         // We could also pass the context to file_and_error_handler
         .fallback(leptos_axum::file_and_error_handler::<app::context::Context, _>(app::shell))

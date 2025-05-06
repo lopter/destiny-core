@@ -150,15 +150,18 @@ main.home {
 
   img {
     margin: 20px;
-
+    aspect-ratio: 715 / 667;
     @media (min-width: 1000px) {
-      width: min(50vw, 700px);
+      width: min(50vw, 700px, calc(min(80vh, 667px) * (715 / 667)));
+      height: min(80vh, 667px, calc(min(50vw, 700px) * (715 / 667)));
     }
     @media (min-width: 600px) and (max-width: 999px) {
-      width: min(66vw, 700px);
+      width: min(66vw, 700px, calc(min(80vh, 667px) * (715 / 667)));
+      height: min(80vh, 667px, calc(min(66vw, 700px) * (715 / 667)));
     }
     @media (max-width: 599px) {
       width: calc(100vw - 2 * var(--body-margin));
+      height: min(50vh, calc((100vw - 2 * var(--body-margin)) * (715 / 667)));
     }
   }
 
@@ -229,12 +232,25 @@ div.tags-list > ul {
 
 footer {
   margin-top: auto;
-}
+  font-size: small;
 
-footer > p > a small {
-  color: var(--color-fg);
-}
+  img {
+    display: inline;
+    aspect-ratio: 1;
+    width: 1em;
+    margin-right: 0.5ex;
+    filter: grayscale(100%);
+  };
 
-footer > p > a small:hover {
-  color: var(--color-link);
+  img:hover {
+    filter: grayscale(0%);
+  };
+
+  > p a {
+    color: var(--color-fg);
+  }
+
+  > p a:hover {
+    color: var(--color-link);
+  }
 }

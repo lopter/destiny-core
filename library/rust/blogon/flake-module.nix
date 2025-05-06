@@ -78,6 +78,7 @@
 
           BLOGON_BLOG_STORE_PATH = "/stash/home/kal/syncthing/archives/blogon/posts";
 
+          RUST_BACKTRACE = "1";
           RUST_LOG = "DEBUG";
         };
       };
