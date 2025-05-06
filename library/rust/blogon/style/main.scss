@@ -102,11 +102,6 @@ body > nav {
     padding: 0;
     margin: 0;
 
-    li {
-      display: flex;
-      align-items: center;
-    }
-
     li::after {
       content: "|";
       margin: 0 5px 0;
@@ -124,6 +119,11 @@ nav > ul {
   justify-content: space-around;
   list-style-type: none;
   padding: 0;
+
+  li {
+    display: flex;
+    align-items: center;
+  }
 
   svg {
     width: 1em;
@@ -202,6 +202,7 @@ main.blog-index {
   > nav > ul {
     flex-direction: column;
     > li {
+      display: inline;
       margin-top: 1em;
     }
   }
