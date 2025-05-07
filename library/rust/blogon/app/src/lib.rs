@@ -21,7 +21,7 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
             <head>
                 <meta charset="utf-8"/>
                 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-                <meta name="description" content="Hello, I am Louis Opter, a generalist software engineer with an eye for: distributed systems, build systems (Nix, Bazel), self-hosting. Proficient in Python, Golang, and C. AKA, kalessin, lopter."/>
+                <meta name="description" content="Hello, I am a generalist software engineer with an eye for: distributed systems, build systems (Nix, Bazel), self-hosting. Proficient in Python, Golang, and C."/>
                 <meta
                     http-equiv="content-security-policy"
                     content=move || {

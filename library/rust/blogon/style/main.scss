@@ -75,7 +75,7 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   color: var(--color-title);
-  font-weight: normal;
+  font-weight: 500;
   font-family: "Raleway", sans-serif;
 }
 
@@ -231,6 +231,14 @@ main.blog-post {
 main.about {
   height: 100%;
   align-items: normal;
+
+  p {
+    text-align: justify;
+  }
+
+  p:last-of-type {
+    text-align: left;
+  }
 }
 
 div.tags-list > ul {
