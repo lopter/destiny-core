@@ -8,6 +8,7 @@
           pname = "backups";
           version = "0.0.1";
           src = ./.;
+          pyproject = true;
 
           build-system = [
             setuptools

@@ -9,6 +9,7 @@
           src = ./.;
           version = "1.0.0-rc.1";
           doCheck = false;
+          pyproject = true;
 
           build-system = [
             setuptools
