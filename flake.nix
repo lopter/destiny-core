@@ -2,7 +2,7 @@
   description = "The code library supporting a Nix'ed homelab";
 
   inputs = {
-    clan-core.url = "git+https://git.clan.lol/clan/clan-core";
+    clan-core.url = "git+https://git.clan.lol/lopter/clan-core?ref=lo-vars-recall-prompts&shallow=1";
     # clan-core.url = "git+file:///stash/home/kal/cu/src/nix/clan-core";
     clan-core.inputs.nixpkgs.follows = "nixpkgs";
     clan-core.inputs.flake-parts.follows = "flake-parts";
