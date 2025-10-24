@@ -13,7 +13,7 @@ buildPythonPackage rec {
   pyproject = true;
 
   src = fetchFromGitHub {
-    rev = "dd4fb4c8b851c36ccbb29c982ddc407f0a12844d";
+    rev = "52f4d2a5a9e1fc3382c0291b81e44317017d6c0d";
     owner = "lopter";
     # louis@(2025-07-12): Note: project will like change repo:
     #
@@ -21,7 +21,7 @@ buildPythonPackage rec {
     # > been repackaged under a new name certbot-dns-plugin and legacy owner of
     # > the previous package will receive the new package as a dependency.
     repo = pname;
-    sha256 = "sha256-s0SEuYU14buovJzky5ZCIPbsaIW42SfXJov220LFnd0=";
+    sha256 = "sha256-xrmAaqgoq2LES9iL21uH3l8tIP5xs9t1bHyQ/XybL80=";
   };
 
   build-system = [
