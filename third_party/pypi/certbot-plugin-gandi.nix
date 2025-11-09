@@ -5,7 +5,7 @@
   hatchling,
   lib,
   requests,
-  zope_interface,
+  zope-interface,
 }:
 buildPythonPackage rec {
   pname = "certbot-plugin-gandi";
@@ -31,7 +31,7 @@ buildPythonPackage rec {
   dependencies = [
     certbot
     requests
-    zope_interface
+    zope-interface
   ];
 
   meta = with lib; {
