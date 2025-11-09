@@ -16,11 +16,13 @@ buildPythonPackage {
   version = "0.3.8";
   pyproject = true;
 
+  # update this can you load it from local disk
+  # so you don't have to push/pull from github?
   src = fetchFromGitHub {
     owner = "lopter";
     repo = "certbot-vault-plugin";
     rev = "v0.3.8-lo-patches";
-    sha256 = "0ci9a0vanzv4mdi8s4ykk3nxj5swvp2hy2jibr9gb6n4ayinchg2";
+    sha256 = "U98ANm5YlNH4UDbPU1uvg1861N31hvb3GfAhx2zZfWM=";
   };
 
   build-system = [
