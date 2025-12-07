@@ -60,6 +60,7 @@
         ./library/python/acl_watcher/flake-module.nix
         ./library/python/backups/flake-module.nix
         ./library/python/hass-pam-authenticate/flake-module.nix
+        ./library/python/monfree/flake-module.nix
         ./library/python/toolbelt/flake-module.nix
 
         ./library/rust/blogon/flake-module.nix
@@ -203,6 +204,7 @@
                 "library/python/acl_watcher" = mkConfig self'.packages.acl-watcher;
                 "library/python/backups" = mkConfig self'.packages.backups;
                 "library/python/toolbelt" = mkConfig self'.packages.toolbelt;
+                "library/python/monfree" = mkConfig self'.packages.monfree;
               };
             programs.ruff.check = true;
             programs.ruff.format = true;
