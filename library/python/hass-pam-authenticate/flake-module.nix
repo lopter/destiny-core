@@ -17,7 +17,7 @@
         dependencies = with pkgs.python3Packages; [
           click
           python-pam
-          systemd
+          systemd-python
         ];
 
         propagatedBuildInputs = with pkgs; [
