@@ -18,32 +18,32 @@ logger = logging.getLogger(__name__)
 gauge_latency_avg = prometheus_client.Gauge(
     "mtr_hop_latency_avg_ms",
     "Average latency for a hop in milliseconds",
-    ["target", "hop", "ip", "asn"],
+    ["target", "hop", "ip", "asn", "source"],
 )
 gauge_latency_best = prometheus_client.Gauge(
     "mtr_hop_latency_best_ms",
     "Best latency for a hop in milliseconds",
-    ["target", "hop", "ip", "asn"],
+    ["target", "hop", "ip", "asn", "source"],
 )
 gauge_latency_worst = prometheus_client.Gauge(
     "mtr_hop_latency_worst_ms",
     "Worst latency for a hop in milliseconds",
-    ["target", "hop", "ip", "asn"],
+    ["target", "hop", "ip", "asn", "source"],
 )
 gauge_latency_stdev = prometheus_client.Gauge(
     "mtr_hop_latency_stdev_ms",
     "Standard deviation of latency for a hop in milliseconds",
-    ["target", "hop", "ip", "asn"],
+    ["target", "hop", "ip", "asn", "source"],
 )
 gauge_loss_ratio = prometheus_client.Gauge(
     "mtr_hop_loss_ratio",
     "Packet loss ratio for a hop",
-    ["target", "hop", "ip", "asn"],
+    ["target", "hop", "ip", "asn", "source"],
 )
 counter_mtr_runs = prometheus_client.Counter(
     "mtr_runs_total",
     "Total number of mtr command executions",
-    ["target", "exit_code"],
+    ["target", "exit_code", "source"],
 )
 
 
@@ -85,6 +85,14 @@ def validate_ip_address(
     help="Endpoint IP address (can be specified multiple times)",
 )
 @click.option(
+    "-s",
+    "--source",
+    multiple=True,
+    required=True,
+    callback=validate_ip_address,
+    help="Source IP address used for monitoring (can be specified multiple times)",
+)
+@click.option(
     "-i",
     "--interval",
     type=click.FloatRange(min=0.0, min_open=True),
@@ -95,18 +103,36 @@ def validate_ip_address(
         "(mtr execution time is subtracted from this)"
     ),
 )
+@click.pass_context
 def exporter(
+    ctx: click.Context,
     port: int,
     listen_addr: str,
     endpoint: list[ipaddress.IPv4Address | ipaddress.IPv6Address],
+    source: list[ipaddress.IPv4Address | ipaddress.IPv6Address],
     interval: float,
 ) -> None:
+    has_ipv4_endpoint = any(is_ipv4(ep) for ep in endpoint)
+    has_ipv6_endpoint = any(is_ipv6(ep) for ep in endpoint)
+    has_ipv4_source = any(is_ipv4(src) for src in source)
+    has_ipv6_source = any(is_ipv6(src) for src in source)
+    if has_ipv4_endpoint and not has_ipv4_source:
+        msg = "IPv4 endpoint(s) specified but no IPv4 source address provided"
+        ctx.fail(msg)
+    if has_ipv6_endpoint and not has_ipv6_source:
+        msg = "IPv6 endpoint(s) specified but no IPv6 source address provided"
+        ctx.fail(msg)
+
+    ipv4_source = next((src for src in source if is_ipv4(src)), None)
+    ipv6_source = next((src for src in source if is_ipv6(src)), None)
+
     wsgi_server, server_thread = prometheus_client.start_http_server(port, listen_addr)
 
     stop_event = threading.Event()
     monitor_threads: list[threading.Thread] = []
-    for ep in endpoint:
-        args = (ep, stop_event, interval)
+    for dest_ip in endpoint:
+        source_ip = ipv4_source if is_ipv4(dest_ip) else ipv6_source
+        args = (dest_ip, source_ip, stop_event, interval)
         thread = threading.Thread(target=monitor, args=args, daemon=False)
         thread.start()
         monitor_threads.append(thread)
@@ -130,18 +156,26 @@ def exporter(
         thread.join()
 
 
+# Could use functools.Placeholder in Python ≥ 3.14
+def is_ipv4(addr: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
+    return isinstance(addr, ipaddress.IPv4Address)
+
+
+def is_ipv6(addr: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
+    return isinstance(addr, ipaddress.IPv6Address)
+
+
 def monitor(
     endpoint: ipaddress.IPv4Address | ipaddress.IPv6Address,
+    source: ipaddress.IPv4Address | ipaddress.IPv6Address,
     stop_event: threading.Event,
     interval: float,
 ) -> None:
     """Monitor an endpoint and export metrics."""
-    if isinstance(endpoint, ipaddress.IPv4Address):
-        ip_version_flag = "-4"
-    else:
-        ip_version_flag = "-6"
+    ip_version_flag = "-4" if is_ipv4(endpoint) else "-6"
 
     target = str(endpoint)
+    source_ip = str(source)
 
     while not stop_event.is_set():
         start_time = time.monotonic()
@@ -167,7 +201,9 @@ def monitor(
             )
 
             exit_code = result.returncode
-            counter_mtr_runs.labels(target=target, exit_code=str(exit_code)).inc()
+            counter_mtr_runs.labels(
+                target=target, exit_code=str(exit_code), source=source_ip
+            ).inc()
             logger.info(f"mtr finished for {target} with exit code {exit_code}")
             if exit_code != 0:
                 logger.warning(
@@ -199,6 +235,7 @@ def monitor(
                     "hop": hop_num,
                     "ip": host_ip,
                     "asn": asn,
+                    "source": source_ip,
                 }
                 gauge_latency_avg.labels(**labels).set(hub.get("Avg", 0.0))
                 gauge_latency_best.labels(**labels).set(hub.get("Best", 0.0))
