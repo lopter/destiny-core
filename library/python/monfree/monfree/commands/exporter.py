@@ -112,19 +112,17 @@ def exporter(
     source: list[ipaddress.IPv4Address | ipaddress.IPv6Address],
     interval: float,
 ) -> None:
-    has_ipv4_endpoint = any(is_ipv4(ep) for ep in endpoint)
-    has_ipv6_endpoint = any(is_ipv6(ep) for ep in endpoint)
-    has_ipv4_source = any(is_ipv4(src) for src in source)
-    has_ipv6_source = any(is_ipv6(src) for src in source)
-    if has_ipv4_endpoint and not has_ipv4_source:
-        msg = "IPv4 endpoint(s) specified but no IPv4 source address provided"
-        ctx.fail(msg)
-    if has_ipv6_endpoint and not has_ipv6_source:
-        msg = "IPv6 endpoint(s) specified but no IPv6 source address provided"
-        ctx.fail(msg)
-
     ipv4_source = next((src for src in source if is_ipv4(src)), None)
     ipv6_source = next((src for src in source if is_ipv6(src)), None)
+
+    has_ipv4_endpoint = any(is_ipv4(ep) for ep in endpoint)
+    has_ipv6_endpoint = any(is_ipv6(ep) for ep in endpoint)
+    if has_ipv4_endpoint and not ipv4_source:
+        msg = "IPv4 endpoint(s) specified but no IPv4 source address provided"
+        ctx.fail(msg)
+    if has_ipv6_endpoint and not ipv6_source:
+        msg = "IPv6 endpoint(s) specified but no IPv6 source address provided"
+        ctx.fail(msg)
 
     wsgi_server, server_thread = prometheus_client.start_http_server(port, listen_addr)
 
@@ -211,8 +209,8 @@ def monitor(
                 )
                 elapsed = time.monotonic() - start_time
                 sleep_time = max(0, interval - elapsed)
-                if sleep_time > 0:
-                    stop_event.wait(timeout=sleep_time)
+                if sleep_time > 0 and stop_event.wait(timeout=sleep_time):
+                    break
                 continue
 
             mtr_data = json.loads(result.stdout)
