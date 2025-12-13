@@ -1,7 +1,10 @@
 import click
 import logging
 
-from . import commands
+from . import (
+    commands,
+    mtrpacket as mtrpacket,
+)
 
 
 @click.group(help="Toolbelt to Monitor my Free connection")

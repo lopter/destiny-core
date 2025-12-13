@@ -1,49 +1,52 @@
+import asyncio
 import click
-import functools
 import ipaddress
 import json
 import logging
 import prometheus_client
 import signal
-import subprocess
 import threading
 import time
 import urllib.error
 import urllib.request
 
+from monfree import mtrpacket
+
 __all__ = ["exporter"]
 
 logger = logging.getLogger(__name__)
 
-gauge_latency_avg = prometheus_client.Gauge(
-    "mtr_hop_latency_avg_ms",
-    "Average latency for a hop in milliseconds",
-    ["target", "hop", "ip", "asn", "source"],
+PING_INTERVAL = 10.0  # seconds
+PING_TTL = 64
+TRACEROUTE_INTERVAL = 30.0  # seconds
+TRACEROUTE_MAX_TTL = 28
+TRACEROUTE_PROBE_DELAY = 0.075  # 75ms between probes
+
+LATENCY_BUCKETS = (
+    0.001,  # 1ms   - local network, same rack
+    0.002,  # 2ms   - same datacenter
+    0.005,  # 5ms   - same datacenter / nearby
+    0.010,  # 10ms  - same metro/region
+    0.020,  # 20ms  - regional
+    0.050,  # 50ms  - same continent
+    0.100,  # 100ms - continental
+    0.200,  # 200ms - intercontinental
+    0.500,  # 500ms - high latency / satellite
+    1.0,    # 1s    - problematic
+    2.0,    # 2s    - severe issues
 )
-gauge_latency_best = prometheus_client.Gauge(
-    "mtr_hop_latency_best_ms",
-    "Best latency for a hop in milliseconds",
-    ["target", "hop", "ip", "asn", "source"],
+
+packet_counter = prometheus_client.Counter(
+    "mtr_packets_total",
+    "Count of packets sent and whether they came back",
+    ["asn", "endpoint", "responder", "result", "source", "task", "ttl"],
 )
-gauge_latency_worst = prometheus_client.Gauge(
-    "mtr_hop_latency_worst_ms",
-    "Worst latency for a hop in milliseconds",
-    ["target", "hop", "ip", "asn", "source"],
-)
-gauge_latency_stdev = prometheus_client.Gauge(
-    "mtr_hop_latency_stdev_ms",
-    "Standard deviation of latency for a hop in milliseconds",
-    ["target", "hop", "ip", "asn", "source"],
-)
-gauge_loss_ratio = prometheus_client.Gauge(
-    "mtr_hop_loss_ratio",
-    "Packet loss ratio for a hop",
-    ["target", "hop", "ip", "asn", "source"],
-)
-counter_mtr_runs = prometheus_client.Counter(
-    "mtr_runs_total",
-    "Total number of mtr command executions",
-    ["target", "exit_code", "source"],
+
+packet_latency = prometheus_client.Histogram(
+    "mtr_ping_latency_seconds",
+    "Latency in seconds for a hop",
+    ["asn", "endpoint", "responder", "source", "task", "ttl"],
+    buckets=LATENCY_BUCKETS,
 )
 
 
@@ -92,17 +95,6 @@ def validate_ip_address(
     callback=validate_ip_address,
     help="Source IP address used for monitoring (can be specified multiple times)",
 )
-@click.option(
-    "-i",
-    "--interval",
-    type=click.FloatRange(min=0.0, min_open=True),
-    default=60.0,
-    show_default=True,
-    help=(
-        "Interval between mtr runs in seconds "
-        "(mtr execution time is subtracted from this)"
-    ),
-)
 @click.pass_context
 def exporter(
     ctx: click.Context,
@@ -110,7 +102,6 @@ def exporter(
     listen_addr: str,
     endpoint: list[ipaddress.IPv4Address | ipaddress.IPv6Address],
     source: list[ipaddress.IPv4Address | ipaddress.IPv6Address],
-    interval: float,
 ) -> None:
     ipv4_source = next((src for src in source if is_ipv4(src)), None)
     ipv6_source = next((src for src in source if is_ipv6(src)), None)
@@ -127,34 +118,29 @@ def exporter(
     wsgi_server, server_thread = prometheus_client.start_http_server(port, listen_addr)
 
     stop_event = threading.Event()
-    monitor_threads: list[threading.Thread] = []
-    for dest_ip in endpoint:
-        source_ip = ipv4_source if is_ipv4(dest_ip) else ipv6_source
-        args = (dest_ip, source_ip, stop_event, interval)
-        thread = threading.Thread(target=monitor, args=args, daemon=False)
-        thread.start()
-        monitor_threads.append(thread)
+    monitor_thread = threading.Thread(
+        target=monitor,
+        args=(endpoint, ipv4_source, ipv6_source, stop_event),
+        daemon=False,
+    )
+    monitor_thread.start()
 
     shutdown_signals = (signal.SIGINT, signal.SIGTERM, signal.SIGQUIT)
-    signal_received = threading.Event()
 
     def signal_handler(signum: int, frame: object) -> None:
         signal_name = signal.Signals(signum).name
         logger.info(f"Received {signal_name}, shutting down…")
-        signal_received.set()
+        stop_event.set()
 
     for sig in shutdown_signals:
         _ = signal.signal(sig, signal_handler)
 
-    _ = signal_received.wait()
+    _ = stop_event.wait()
     wsgi_server.shutdown()
-    stop_event.set()
     server_thread.join()
-    for thread in monitor_threads:
-        thread.join()
+    monitor_thread.join()
 
 
-# Could use functools.Placeholder in Python ≥ 3.14
 def is_ipv4(addr: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
     return isinstance(addr, ipaddress.IPv4Address)
 
@@ -164,100 +150,190 @@ def is_ipv6(addr: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
 
 
 def monitor(
+    endpoints: list[ipaddress.IPv4Address | ipaddress.IPv6Address],
+    ipv4_source: ipaddress.IPv4Address | None,
+    ipv6_source: ipaddress.IPv6Address | None,
+    stop_event: threading.Event,
+) -> None:
+    """Monitor endpoints and export metrics using asyncio."""
+    try:
+        asyncio.run(async_monitor(endpoints, ipv4_source, ipv6_source, stop_event))
+    except Exception as e:
+        logger.error(f"Monitor failed: {e}")
+        stop_event.set()
+        raise
+
+
+async def async_monitor(
+    endpoints: list[ipaddress.IPv4Address | ipaddress.IPv6Address],
+    ipv4_source: ipaddress.IPv4Address | None,
+    ipv6_source: ipaddress.IPv6Address | None,
+    stop_event: threading.Event,
+) -> None:
+    """Async implementation of the monitor."""
+    async with mtrpacket.MtrPacket() as mtr:
+        loop = asyncio.get_running_loop()
+
+        tasks: list[asyncio.Task] = []
+        for ep in endpoints:
+            source = ipv4_source if is_ipv4(ep) else ipv6_source
+            tasks.append(asyncio.create_task(ping(mtr, ep, source)))
+            tasks.append(asyncio.create_task(traceroute(mtr, ep, source)))
+
+        stop_future = loop.run_in_executor(None, stop_event.wait)
+
+        done, pending = await asyncio.wait(
+            [stop_future, *tasks],
+            return_when=asyncio.FIRST_COMPLETED,
+        )
+
+        for p in pending:
+            p.cancel()
+        await asyncio.gather(*pending, return_exceptions=True)
+
+        for d in done:
+            if d is not stop_future and (exc := d.exception()) is not None:
+                raise exc
+
+
+async def ping(
+    mtr: mtrpacket.MtrPacket,
     endpoint: ipaddress.IPv4Address | ipaddress.IPv6Address,
     source: ipaddress.IPv4Address | ipaddress.IPv6Address,
-    stop_event: threading.Event,
-    interval: float,
 ) -> None:
-    """Monitor an endpoint and export metrics."""
-    ip_version_flag = "-4" if is_ipv4(endpoint) else "-6"
+    """Continuously ping an endpoint every PING_INTERVAL seconds."""
 
-    target = str(endpoint)
-    source_ip = str(source)
+    endpoint_str = str(endpoint)
+    source_str = str(source)
+    base_labels = {
+        "endpoint": endpoint_str,
+        "source": source_str,
+        "task": "ping",
+        "ttl": str(PING_TTL),
+    }
 
-    while not stop_event.is_set():
-        start_time = time.monotonic()
+    try:
+        while True:
+            start_time = time.monotonic()
 
-        cmd = [
-            "mtr",
-            "--no-dns",
-            "--json",
-            "--report-cycles",
-            "5",
-            ip_version_flag,
-            target,
-        ]
-        logger.info(f"Running mtr for {target}")
-
-        try:
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=30,
-                check=False,
+            logger.info(f"ping: sending probe to {endpoint_str}")
+            result = await mtr.probe(
+                endpoint_str,
+                ttl=PING_TTL,
+                protocol="icmp",
+            )
+            logger.info(
+                f"ping: got {result.result} from {endpoint_str} "
+                f"in {result.time_ms}ms"
             )
 
-            exit_code = result.returncode
-            counter_mtr_runs.labels(
-                target=target, exit_code=str(exit_code), source=source_ip
-            ).inc()
-            logger.info(f"mtr finished for {target} with exit code {exit_code}")
-            if exit_code != 0:
-                logger.warning(
-                    f"mtr command failed for {target} with exit code {exit_code}"
+            responder = result.responder or ""
+            asn = await get_asn(responder)
+
+            labels = base_labels | {
+                "asn": asn,
+                "responder": responder,
+                "result": result.result,
+            }
+            packet_counter.labels(**labels).inc()
+
+            if result.time_ms is not None:
+                del labels["result"]
+                packet_latency.labels(**labels).observe(result.time_ms / 1000.0)
+
+            elapsed = time.monotonic() - start_time
+            sleep_time = max(0, PING_INTERVAL - elapsed)
+            if sleep_time > 0:
+                await asyncio.sleep(sleep_time)
+    except asyncio.CancelledError:
+        pass
+
+
+async def traceroute(
+    mtr: mtrpacket.MtrPacket,
+    endpoint: ipaddress.IPv4Address | ipaddress.IPv6Address,
+    source: ipaddress.IPv4Address | ipaddress.IPv6Address,
+) -> None:
+    """Continuously traceroute to an endpoint every TRACEROUTE_INTERVAL seconds."""
+
+    endpoint_str = str(endpoint)
+    source_str = str(source)
+    base_labels = {
+        "endpoint": endpoint_str,
+        "source": source_str,
+        "task": "traceroute",
+    }
+
+    try:
+        while True:
+            start_time = time.monotonic()
+
+            for ttl in range(1, TRACEROUTE_MAX_TTL + 1):
+                logger.info(
+                    f"traceroute: sending probe to "
+                    f"{endpoint_str} with ttl={ttl}"
                 )
-                elapsed = time.monotonic() - start_time
-                sleep_time = max(0, interval - elapsed)
-                if sleep_time > 0 and stop_event.wait(timeout=sleep_time):
-                    break
-                continue
+                result = await mtr.probe(
+                    endpoint_str,
+                    ttl=ttl,
+                    protocol="icmp",
+                )
+                logger.info(
+                    f"traceroute: got {result.result} from "
+                    f"{result.responder or "???"} at ttl={ttl} for "
+                    f"{endpoint_str} in {result.time_ms or "???"}ms"
+                )
 
-            mtr_data = json.loads(result.stdout)
-            hubs = mtr_data.get("report", {}).get("hubs", [])
-            for hub in hubs:
-                host_ip = hub.get("host", "")
-                if host_ip == "???":
-                    continue
-                hop_num = str(hub.get("count", "na"))
-                asn = "na"
-                try:
-                    ip_obj = ipaddress.ip_address(host_ip)
-                    if ip_obj.is_global:
-                        asn = lookup_asn(host_ip)
-                except ValueError:
-                    logger.warning(f"could not parse ip from mtr: {host_ip}")
+                responder = result.responder or ""
+                asn = await get_asn(responder)
 
-                labels = {
-                    "target": target,
-                    "hop": hop_num,
-                    "ip": host_ip,
+                labels = base_labels | {
                     "asn": asn,
-                    "source": source_ip,
+                    "responder": responder,
+                    "result": result.result,
+                    "ttl": str(ttl),
                 }
-                gauge_latency_avg.labels(**labels).set(hub.get("Avg", 0.0))
-                gauge_latency_best.labels(**labels).set(hub.get("Best", 0.0))
-                gauge_latency_worst.labels(**labels).set(hub.get("Wrst", 0.0))
-                gauge_latency_stdev.labels(**labels).set(hub.get("StDev", 0.0))
-                gauge_loss_ratio.labels(**labels).set(hub.get("Loss%", 0.0) / 100)
+                packet_counter.labels(**labels).inc()
 
-        except subprocess.TimeoutExpired:
-            logger.warning(f"mtr command timed out for {target}")
-        except json.JSONDecodeError as e:
-            logger.warning(f"Failed to parse mtr output for {target}: {e}")
-        except Exception as e:
-            logger.warning(f"Unexpected error monitoring {target}: {e}")
+                if result.time_ms is not None:
+                    del labels["result"]
+                    time_s = result.time_ms / 1000.0
+                    packet_latency.labels(**labels).observe(time_s)
 
-        elapsed = time.monotonic() - start_time
-        sleep_time = max(0, interval - elapsed)
+                await asyncio.sleep(TRACEROUTE_PROBE_DELAY)
 
-        if sleep_time > 0:
-            stop_event.wait(timeout=sleep_time)
+            elapsed = time.monotonic() - start_time
+            sleep_time = max(0, TRACEROUTE_INTERVAL - elapsed)
+            if sleep_time > 0:
+                await asyncio.sleep(sleep_time)
+    except asyncio.CancelledError:
+        pass
 
 
-@functools.lru_cache
+_asn_cache: dict[str, str] = {}
+
+
+async def get_asn(responder: str) -> str:
+    """Get ASN for a responder IP, returns 'na' for non-global or on failure."""
+
+    if not responder:
+        return "na"
+    try:
+        ip_obj = ipaddress.ip_address(responder)
+    except ValueError:
+        return "na"
+    if not ip_obj.is_global:
+        return "na"
+    asn = _asn_cache.get(responder)
+    if asn is None:
+        asn = await asyncio.to_thread(lookup_asn, responder)
+        _asn_cache[responder] = asn
+    return asn
+
+
 def lookup_asn(ip: str) -> str:
     """Lookup ASN for an IP address using RIPE API. Returns 'na' on failure."""
+
     url = f"https://stat.ripe.net/data/network-info/data.json?resource={ip}"
     max_retries = 3
     retry_delay = 0.5
