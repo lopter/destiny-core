@@ -177,6 +177,7 @@ async def async_monitor(
         tasks: list[asyncio.Task] = []
         for ep in endpoints:
             source = ipv4_source if is_ipv4(ep) else ipv6_source
+            assert source is not None
             tasks.append(asyncio.create_task(ping(mtr, ep, source)))
             tasks.append(asyncio.create_task(traceroute(mtr, ep, source)))
 
@@ -300,7 +301,8 @@ async def traceroute(
                     time_s = result.time_ms / 1000.0
                     packet_latency.labels(**labels).observe(time_s)
 
-                await asyncio.sleep(TRACEROUTE_PROBE_DELAY)
+                if result.result == "reply":
+                    break
 
             elapsed = time.monotonic() - start_time
             sleep_time = max(0, TRACEROUTE_INTERVAL - elapsed)
