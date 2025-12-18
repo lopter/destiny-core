@@ -10,6 +10,8 @@ import time
 import urllib.error
 import urllib.request
 
+from typing import NamedTuple
+
 from monfree import mtrpacket
 
 __all__ = ["exporter"]
@@ -21,6 +23,7 @@ PING_TTL = 64
 TRACEROUTE_INTERVAL = 30.0  # seconds
 TRACEROUTE_MAX_TTL = 28
 TRACEROUTE_PROBE_DELAY = 0.075  # 75ms between probes
+TRACEROUTE_PROBE_COUNT_PER_TTL = 3  # launch 3 probes for each hop
 
 LATENCY_BUCKETS = (
     0.001,  # 1ms   - local network, same rack
@@ -250,6 +253,12 @@ async def ping(
         pass
 
 
+class TracerouteProbe(NamedTuple):
+
+    ttl: int
+    task: asyncio.Task[mtrpacket.ProbeResult]
+
+
 async def traceroute(
     mtr: mtrpacket.MtrPacket,
     endpoint: ipaddress.IPv4Address | ipaddress.IPv6Address,
@@ -267,19 +276,39 @@ async def traceroute(
 
     try:
         while True:
-            start_time = time.monotonic()
+            logger.info(
+                f"traceroute: sending {TRACEROUTE_PROBE_COUNT_PER_TTL} probes "
+                f"to {endpoint_str} with ttl=1..{TRACEROUTE_MAX_TTL}"
+            )
 
-            for ttl in range(1, TRACEROUTE_MAX_TTL + 1):
-                logger.info(
-                    f"traceroute: sending probe to "
-                    f"{endpoint_str} with ttl={ttl}"
-                )
-                result = await mtr.probe(
-                    endpoint_str,
-                    ttl=ttl,
-                    protocol="icmp",
-                )
-                logger.info(
+            start_time = time.monotonic()
+            probes: list[TracerouteProbe] = []
+
+            async with asyncio.TaskGroup() as tg:
+                for ttl in range(1, TRACEROUTE_MAX_TTL + 1):
+                    count = TRACEROUTE_PROBE_COUNT_PER_TTL
+                    for n in range(1, count + 1):
+                        task: asyncio.Task[mtrpacket.ProbeResult] = tg.create_task(
+                            mtr.probe(
+                                endpoint_str,
+                                ttl=ttl,
+                                protocol="icmp",
+                            ),
+                            name=(
+                                f"traceroute: ping no {n}/{count} "
+                                f"to {endpoint_str} with ttl={ttl}"
+                            ),
+                            eager_start=True,
+                        )
+                        probes.append(TracerouteProbe(ttl, task))
+                        await asyncio.sleep(TRACEROUTE_PROBE_DELAY)
+
+            last_successful_ttl = None
+            for probe in probes:
+                ttl = probe.ttl
+                result = probe.task.result()
+
+                logger.debug(
                     f"traceroute: got {result.result} from "
                     f"{result.responder or "???"} at ttl={ttl} for "
                     f"{endpoint_str} in {result.time_ms or "???"}ms"
@@ -288,11 +317,30 @@ async def traceroute(
                 responder = result.responder or ""
                 asn = await get_asn(responder)
 
+                # This is an attempt to coalesce all the replies at the TTL
+                # that corresponds to the actual "distance" to the endpoint.
+                # It's imperfect, and I am not sure how to make it better.
+                ttl_label = str(ttl)
+                if result.success:
+                    if last_successful_ttl is None:
+                        # We have reached the destination record this TTL as
+                        # the "actual distance" and use it for future replies.
+                        # This coalesces all the results under the same TTL
+                        # which makes it easier to visualize the results.
+                        last_successful_ttl = ttl
+                    ttl_label = str(last_successful_ttl)
+                elif result.result == "ttl-expired":
+                    # Reset, it is possible that the destination moved "further
+                    # away" from us due to ECMP. Unfortunately, since this loop
+                    # iterates over increasing values for `ttl` we cannot
+                    # detect the destination moving back "closer" to us.
+                    last_successful_ttl = None
+
                 labels = base_labels | {
                     "asn": asn,
                     "responder": responder,
                     "result": result.result,
-                    "ttl": str(ttl),
+                    "ttl": ttl_label,
                 }
                 packet_counter.labels(**labels).inc()
 
@@ -301,10 +349,11 @@ async def traceroute(
                     time_s = result.time_ms / 1000.0
                     packet_latency.labels(**labels).observe(time_s)
 
-                if result.result == "reply":
-                    break
-
             elapsed = time.monotonic() - start_time
+            logger.info(
+                f"traceroute: {len(probes)} probes "
+                f"to {endpoint_str} have been handled in {round(elapsed)}s"
+            )
             sleep_time = max(0, TRACEROUTE_INTERVAL - elapsed)
             if sleep_time > 0:
                 await asyncio.sleep(sleep_time)

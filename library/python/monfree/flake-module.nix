@@ -2,7 +2,8 @@
   perSystem =
     { pkgs, ... }:
     let
-      monfree = pkgs.python3Packages.buildPythonApplication {
+      pythonPkgs = pkgs.python314Packages;
+      monfree = pythonPkgs.buildPythonApplication {
         pname = "monfree";
         meta.mainProgram = "monfree";
         src = ./.;
@@ -10,11 +11,11 @@
         doCheck = false;
         pyproject = true;
 
-        build-system = with pkgs.python3Packages; [
+        build-system = with pythonPkgs; [
           setuptools
         ];
 
-        dependencies = with pkgs.python3Packages; [
+        dependencies = with pythonPkgs; [
           click
           prometheus-client
         ];
@@ -28,7 +29,7 @@
       packages.monfree = monfree;
       devShells.monfree = pkgs.mkShell {
         propagatedBuildInputs = [
-          pkgs.python3Packages.ipython
+          pythonPkgs.ipython
           monfree.dependencies
         ];
       };
