@@ -6,6 +6,7 @@
     # clan-core.url = "git+file:///stash/home/kal/cu/src/nix/clan-core";
     clan-core.inputs.nixpkgs.follows = "nixpkgs";
     clan-core.inputs.flake-parts.follows = "flake-parts";
+    clan-core.inputs.treefmt-nix.follows = "treefmt-nix";
 
     flake-parts.url = "github:hercules-ci/flake-parts";
     flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs";
@@ -76,7 +77,6 @@
           inputs',
           pkgs,
           system,
-          setupRustToolchain,
           ...
         }:
         {
