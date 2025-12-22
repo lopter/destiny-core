@@ -22,7 +22,8 @@ PING_INTERVAL = 10.0  # seconds
 PING_TTL = 64
 TRACEROUTE_INTERVAL = 30.0  # seconds
 TRACEROUTE_MAX_TTL = 28
-TRACEROUTE_PROBE_DELAY = 0.075  # 75ms between probes
+TRACEROUTE_HOP_DELAY = 0.075  # 75ms between sending probes for each hop
+TRACEROUTE_PROBE_DELAY = 1.0  # 1s delay between probes for a specific hop
 TRACEROUTE_PROBE_COUNT_PER_TTL = 3  # launch 3 probes for each hop
 
 PROBE_TIMEOUT = 10  # second, both for traceroute & ping
@@ -287,17 +288,27 @@ async def traceroute(
             start_time = time.monotonic()
             probes: list[TracerouteProbe] = []
 
+            async def probe_with_delay(
+                delay: float, ttl: int,
+            ) -> mtrpacket.ProbeResult:
+                if delay > 0:
+                    await asyncio.sleep(delay)
+                return await mtr.probe(
+                    endpoint_str,
+                    ttl=ttl,
+                    protocol="icmp",
+                    timeout=PROBE_TIMEOUT,
+                )
+
             async with asyncio.TaskGroup() as tg:
                 for ttl in range(1, TRACEROUTE_MAX_TTL + 1):
                     count = TRACEROUTE_PROBE_COUNT_PER_TTL
                     for n in range(1, count + 1):
+                        # net.ipv4.icmp_ratelimit defaults to 1000ms on Linux so
+                        # let's space out the three probes for each ttl by 1s:
+                        delay = TRACEROUTE_PROBE_DELAY * (n - 1)
                         task: asyncio.Task[mtrpacket.ProbeResult] = tg.create_task(
-                            mtr.probe(
-                                endpoint_str,
-                                ttl=ttl,
-                                protocol="icmp",
-                                timeout=PROBE_TIMEOUT,
-                            ),
+                            probe_with_delay(delay, ttl),
                             name=(
                                 f"traceroute: ping no {n}/{count} "
                                 f"to {endpoint_str} with ttl={ttl}"
@@ -305,7 +316,7 @@ async def traceroute(
                             eager_start=True,
                         )
                         probes.append(TracerouteProbe(ttl, task))
-                        await asyncio.sleep(TRACEROUTE_PROBE_DELAY)
+                        await asyncio.sleep(TRACEROUTE_HOP_DELAY)
 
             last_successful_ttl = None
             for probe in probes:
