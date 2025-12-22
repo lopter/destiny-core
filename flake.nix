@@ -39,19 +39,14 @@
     advisory-db.url = "github:rustsec/advisory-db";
     advisory-db.flake = false;
 
-    # devenv inputs:
-    devenv.url = "github:cachix/devenv";
-    devenv.inputs.nixpkgs.follows = "nixpkgs";
     nix2container.url = "github:nlewo/nix2container";
     nix2container.inputs.nixpkgs.follows = "nixpkgs";
-    mk-shell-bin.url = "github:rrbutani/nix-mk-shell-bin";
   };
 
   outputs =
     inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
-        inputs.devenv.flakeModule
         inputs.treefmt-nix.flakeModule
 
         ./library/bash/flake-module.nix
@@ -146,11 +141,8 @@
               }
             );
 
-          devenv.shells.default = {
+          devShells.default = pkgs.mkShell {
             name = "default";
-
-            # Enable C for Rust, since we are setting up our toolchain manually.
-            languages.c.enable = true;
 
             packages =
               [

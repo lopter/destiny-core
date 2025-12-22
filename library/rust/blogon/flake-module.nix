@@ -55,7 +55,7 @@
           };
       });
 
-      devenv.shells.blogon = {
+      devShells.blogon = pkgs.mkShell {
         name = "blogon";
 
         packages = with pkgs; [
