@@ -63,17 +63,17 @@ setting.
 @utils.clan.ensure_root_directory
 def rotate_ca_cert(
     common_name: str,
-    country: Optional[str],
-    location: Optional[str],
-    organization: Optional[str],
-    state: Optional[str],
-    organizational_unit: Optional[str],
+    country: str|None,
+    location: str|None,
+    organization: str|None,
+    state: str|None,
+    organizational_unit: str|None,
     expiry: str,
     algo: str,
     machine: str,
     pass_dir: str,
 ) -> None:
-    def clean_attrs(d):
+    def clean_attrs(d: dict[str, str|None]) -> dict[str, str]:
         return {k: v for k, v in d.items() if v is not None}
 
     csr: dict[str, Any] = {
