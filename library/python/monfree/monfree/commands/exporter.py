@@ -25,6 +25,8 @@ TRACEROUTE_MAX_TTL = 28
 TRACEROUTE_PROBE_DELAY = 0.075  # 75ms between probes
 TRACEROUTE_PROBE_COUNT_PER_TTL = 3  # launch 3 probes for each hop
 
+PROBE_TIMEOUT = 10  # second, both for traceroute & ping
+
 LATENCY_BUCKETS = (
     0.001,  # 1ms   - local network, same rack
     0.002,  # 2ms   - same datacenter
@@ -225,6 +227,7 @@ async def ping(
                 endpoint_str,
                 ttl=PING_TTL,
                 protocol="icmp",
+                timeout=PROBE_TIMEOUT,
             )
             logger.info(
                 f"ping: got {result.result} from {endpoint_str} "
@@ -293,6 +296,7 @@ async def traceroute(
                                 endpoint_str,
                                 ttl=ttl,
                                 protocol="icmp",
+                                timeout=PROBE_TIMEOUT,
                             ),
                             name=(
                                 f"traceroute: ping no {n}/{count} "
