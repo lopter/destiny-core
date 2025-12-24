@@ -336,8 +336,9 @@ async def traceroute(
                 # that corresponds to the actual "distance" to the endpoint.
                 # It's imperfect, and I am not sure how to make it better.
                 ttl_label = str(ttl)
+                destination_already_reached = last_successful_ttl is not None
                 if result.success:
-                    if last_successful_ttl is None:
+                    if not destination_already_reached:
                         # We have reached the destination record this TTL as
                         # the "actual distance" and use it for future replies.
                         # This coalesces all the results under the same TTL
@@ -350,6 +351,12 @@ async def traceroute(
                     # iterates over increasing values for `ttl` we cannot
                     # detect the destination moving back "closer" to us.
                     last_successful_ttl = None
+                elif destination_already_reached and ttl > last_successful_ttl:
+                    # Ignore packets that go beyond the destination since we
+                    # might trigger ratelimits there and get artificial failures
+                    # that we would attribute to the wrong TTL since we
+                    # only rewrite `ttl_label` in case of success.
+                    continue
 
                 labels = base_labels | {
                     "asn": asn,
