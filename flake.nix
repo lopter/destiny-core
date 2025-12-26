@@ -3,7 +3,7 @@
 
   inputs = {
     clan-core.url = "git+https://git.clan.lol/lopter/clan-core?ref=lo-vars-recall-prompts&shallow=1";
-    # clan-core.url = "git+file:///stash/home/kal/cu/src/nix/clan-core";
+    # clan-core.url = "git+file:///stash/home/kal/cu/src/nix/clan-core/lo-rebase";
     clan-core.inputs.nixpkgs.follows = "nixpkgs";
     clan-core.inputs.flake-parts.follows = "flake-parts";
     clan-core.inputs.treefmt-nix.follows = "treefmt-nix";
