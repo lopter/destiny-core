@@ -15,4 +15,4 @@ setuptools.setup(
             "clan-destiny-backups-restore=clan_destiny.backups.restore.__main__:main",
         ]
     },
-)
+)  # pyright: ignore[reportUnusedCallResult]

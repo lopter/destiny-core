@@ -2,23 +2,28 @@ import asyncio
 import email.mime.application
 import email.mime.multipart
 import email.mime.text
+import gzip
 import logging
 import os
-import shlex
 import smtplib
 import socket
 import tempfile
 
+from collections.abc import Sequence
 from pathlib import Path
 
 from clan_destiny.backups import config, utils
 from .job import BackupJob
-from .rsync import RsyncCommands
 
 logger = logging.getLogger("backups.dump")
 
 
-def _send_status_email(subject, exec_log, stdout=None, stderr=None) -> None:
+def _send_status_email(
+    subject: str,
+    exec_log: Sequence[str],
+    stdout: Path | None = None,
+    stderr: Path | None = None,
+) -> None:
     status_email = email.mime.multipart.MIMEMultipart()
     status_email["From"] = status_email["To"] = from_addr = to_addr = "root"
     status_email["Subject"] = subject
@@ -32,17 +37,47 @@ def _send_status_email(subject, exec_log, stdout=None, stderr=None) -> None:
                 mime_logfile = MIMEApp(data, "gzip")
                 mime_name = os.path.basename(fname) + ".gz"
                 mime_logfile.add_header(
-                    "Content-Disposition", "attachment", filename=mime_name,
+                    "Content-Disposition",
+                    "attachment",
+                    filename=mime_name,
                 )
                 status_email.attach(mime_logfile)
     else:
         body_parts.append("\nThe backup job could not run.")
     body_parts.append("\n-- \n{}\n".format(__file__))
-    status_email.attach(email.mime.text.MIMEText(
-        "\n".join(body_parts), "plain", "utf-8",
-    ))
-    smtpc = smtplib.SMTP("localhost")
-    smtpc.sendmail(from_addr, to_addr, status_email.as_string())
+    status_email.attach(
+        email.mime.text.MIMEText(
+            "\n".join(body_parts),
+            "plain",
+            "utf-8",
+        )
+    )
+    try:
+        smtpc = smtplib.SMTP("localhost")
+        errs = smtpc.sendmail(from_addr, to_addr, status_email.as_string())
+        assert errs == {}
+        return
+    except Exception as ex:
+        logger.warning(f"Couldn't send email to {to_addr}: {ex}")
+
+    logger.warning(subject)
+    if len(exec_log) > 0:
+        logger.warning("=== exec log ===")
+        for line in exec_log:
+            logger.warning(line)
+        logger.warning("================")
+    if stdout is not None:
+        logger.warning("==== stdout ====")
+        with gzip.open(stdout, "rt", encoding="utf-8") as fp:
+            for line in fp:
+                logger.warning(line.strip())
+        logger.warning("================")
+    if stderr is not None:
+        logger.warning("==== stderr ====")
+        with gzip.open(stderr, "rt", encoding="utf-8") as fp:
+            for line in fp:
+                logger.warning(line.strip())
+        logger.warning("================")
 
 
 def run(cfg: config.Config, host_fqdn: str) -> None:
@@ -73,10 +108,7 @@ def run(cfg: config.Config, host_fqdn: str) -> None:
 
         job_total += 1
         if not asyncio.run(utils.is_mounted(job.local_path)):
-            msg = (
-                f"The filesystem associated with job "
-                f"\"{job_name}\" is not mounted"
-            )
+            msg = f'The filesystem associated with job "{job_name}" is not mounted'
             logger.error(msg)
             subject = "{type} backup job #{name} FAILED on {host}".format(
                 type=job.type.value,
@@ -85,7 +117,7 @@ def run(cfg: config.Config, host_fqdn: str) -> None:
             )
             _send_status_email(
                 subject=subject,
-                exec_log=msg,
+                exec_log=tuple(msg),
                 stdout=None,
                 stderr=None,
             )
@@ -109,7 +141,7 @@ def run(cfg: config.Config, host_fqdn: str) -> None:
             )
 
     if job_total == 0:
-        logger.info(f"No backups configured")
+        logger.info("No backups configured")
         return
 
     logger.info(f"{job_count}/{job_total} backup jobs ran successfully")
@@ -127,56 +159,3 @@ def setup_debug_script(
     tmp_dir = Path(tempfile.mkdtemp(suffix=job_name, prefix="backups"))
     BackupJob.from_name_and_config(job_name, cfg, tmp_dir).setup_debug_script()
     return tmp_dir
-
-
-def generate_root_authorized_keys(
-    cfg: config.Config,
-    host_aliases: tuple[str, ...],
-) -> None:
-    """Generate the SSH config to accept backup jobs from remote hosts.
-
-    The generated SSH config is written to stdout. Errors are logged.
-
-    :param host_aliases: values in this tuple are compared against `local_host`
-      `remote_host` in the config. This is most likely just the FQDN, but maybe
-      in the future being able to just use the hostname might be useful.
-    """
-    lines: list[str] = []
-    for job_name, job_cfg in cfg.jobs_by_name.items():
-        if job_cfg.type != config.BackupType.RSYNC:
-            continue  # A job that doesn't need to edit authorized_keys.
-        if job_cfg.remote_host not in host_aliases:
-            continue  # This host is not the destination for this backup.
-
-        if not job_cfg.public_key_path:
-            logger.error(f"Missing public key path for backup job {job_name}")
-            continue
-
-        pub_key = job_cfg.public_key_path.read_text().strip()
-        if not pub_key:
-            logger.error(f"Empty public key for backup job {job_name}")
-            continue
-
-        rsync = RsyncCommands(
-            remote_host=job_cfg.remote_host,
-            local_path=job_cfg.local_path,
-            remote_path=job_cfg.remote_path,
-        )
-        # XXX:
-        #
-        # The escaping is pretty fragile here, this happens to work because
-        # shlex.quote will use single quotes. The sshd manpage only tells us
-        # that quotes can be escaped with a backslash:
-        lines.append(
-            "restrict,command=\"clan_destiny-backups-dump is_mounted {} && {}\" {}".format(
-                shlex.quote(job_cfg.remote_path),
-                " ".join(
-                    shlex.quote(arg)
-                    for arg in rsync.server_mirror_copy(job_cfg.direction)
-                ),
-                pub_key,
-            )
-        )
-    print("\n".join(lines))
-
-# vim: set foldmethod=marker:

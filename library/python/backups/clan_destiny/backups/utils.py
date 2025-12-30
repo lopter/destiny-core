@@ -22,32 +22,26 @@ async def is_mounted(filepath: Path) -> bool:
 
     fstab_cmd = ["findmnt", "--json", "--fstab"]
     fstab_proc_f = asyncio.create_subprocess_exec(
-        *fstab_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        *fstab_cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
     mtab_cmd = ["findmnt", "--json", "--target", str(filepath)]
     mtab_proc_f = asyncio.create_subprocess_exec(
-        *mtab_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        *mtab_cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
     fstab_proc = await fstab_proc_f
     mtab_proc = await mtab_proc_f
-    fstab_out, fstab_err = (
-        buf.decode() for buf in
-        await fstab_proc.communicate()
-    )
-    mtab_out, mtab_err = (
-        buf.decode() for buf in
-        await mtab_proc.communicate()
-    )
+    fstab_out, fstab_err = (buf.decode() for buf in await fstab_proc.communicate())
+    mtab_out, mtab_err = (buf.decode() for buf in await mtab_proc.communicate())
     fstab_rc = await fstab_proc.wait()
     mtab_rc = await mtab_proc.wait()
     if fstab_rc != 0 or len(fstab_err):
-        raise subprocess.CalledProcessError(
-            fstab_rc, fstab_cmd, fstab_out, fstab_err
-        )
+        raise subprocess.CalledProcessError(fstab_rc, fstab_cmd, fstab_out, fstab_err)
     if mtab_rc or len(mtab_err):
-        raise subprocess.CalledProcessError(
-            mtab_rc, mtab_cmd, mtab_out, mtab_err
-        )
+        raise subprocess.CalledProcessError(mtab_rc, mtab_cmd, mtab_out, mtab_err)
 
     fstab_entries = json.loads(fstab_out)["filesystems"]
     mtab_entries = json.loads(mtab_out)["filesystems"]
@@ -69,6 +63,6 @@ def make_tmp_dir(
     dir: str | None = None,
 ) -> Generator[Path, None, None]:
     tmpdir = tempfile.mkdtemp(suffix, prefix, dir)
-    atexit.register(lambda: shutil.rmtree(tmpdir, ignore_errors=True))
+    _ = atexit.register(lambda: shutil.rmtree(tmpdir, ignore_errors=True))
     yield Path(tmpdir)
     shutil.rmtree(tmpdir, ignore_errors=True)
