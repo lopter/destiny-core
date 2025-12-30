@@ -7,10 +7,6 @@ import socket
 import subprocess
 
 from pathlib import Path
-from typing import (
-    List,
-    Union,
-)
 
 from clan_destiny.backups import config
 from .rsync import RsyncCommands
@@ -22,8 +18,8 @@ class BackupResult(object):
         self.tmp_dir = tmp_dir
         self.stdout_fname = tmp_dir / "stdout"
         self.stderr_fname = tmp_dir / "stderr"
-        self.return_code = None  # type: Union[None, int]
-        self.log = []  # type: List[str]
+        self.return_code: None | int = None  # type
+        self.log: list[str] = []
 
     @classmethod
     def _call_gzip(cls, stdout):
@@ -103,10 +99,10 @@ class RsyncBackupJob(BackupJob):
     def __init__(
         self,
         tmp_dir: Path,
-        name,  # type: str
+        name: str,
         type: config.BackupType,
         local_path: Path,
-        remote_host,  # type: str
+        remote_host: str,
         remote_path: Path,
         private_key_path: Path,
         direction: config.BackupDirection,
@@ -122,7 +118,7 @@ class RsyncBackupJob(BackupJob):
         if direction == config.BackupDirection.PULL:
             os.makedirs(local_path, exist_ok=True)
 
-    def run(self):  # type: () -> BackupResult
+    def run(self) -> BackupResult:
         result = BackupResult(self.tmp_dir)
         with result.tmp_capture_files():
             cmd = RsyncCommands(

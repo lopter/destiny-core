@@ -5,7 +5,6 @@ import subprocess
 import sys
 
 from pathlib import Path
-from typing import Optional
 
 from clan_destiny.backups import config, utils
 
@@ -28,7 +27,7 @@ from clan_destiny.backups import config, utils
     ),
 )
 @click.argument("job_name")
-def main(config_path: Path, dest_path: Optional[Path], job_name: str) -> None:
+def main(config_path: Path, dest_path: Path | None, job_name: str) -> None:
     cfg = config.Config.load(config_path)
 
     job_cfg = cfg.jobs_by_name.get(job_name)

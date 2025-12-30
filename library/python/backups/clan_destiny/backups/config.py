@@ -4,7 +4,7 @@ import dataclasses
 import enum
 import json
 
-from typing import Any, Optional, Dict
+from typing import Any
 from pathlib import Path
 
 # The file was originally spit by ChatGPT, ideally we would have something
@@ -53,13 +53,13 @@ class BackupJob:
     direction: BackupDirection
     local_host: str
     local_path: Path
-    remote_host: Optional[str]
-    remote_path: Optional[Path]
+    remote_host: str | None
+    remote_path: Path | None
     one_file_system: bool
-    public_key_path: Optional[Path]
-    private_key_path: Optional[Path]
-    password_path: Optional[Path]
-    retention: Optional[str]
+    public_key_path: Path | None
+    private_key_path: Path | None
+    password_path: Path | None
+    retention: str | None
 
     def validate(self):
         if not self.local_host:
@@ -89,7 +89,7 @@ class BackupJob:
 
 @dataclasses.dataclass
 class Config:
-    jobs_by_name: Dict[str, BackupJob]
+    jobs_by_name: dict[str, BackupJob]
     restic: Restic
 
     @classmethod

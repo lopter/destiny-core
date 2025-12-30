@@ -12,7 +12,6 @@
 
           build-system = [
             setuptools
-            setuptools-scm
           ];
 
           dependencies = [
@@ -21,6 +20,7 @@
 
           propagatedBuildInputs = with pkgs; [
             gzip
+            findmnt
             restic
             rsync
             util-linux

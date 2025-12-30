@@ -7,11 +7,8 @@ import shutil
 import subprocess
 import tempfile
 
+from collections.abc import Generator
 from pathlib import Path
-from typing import (
-    Generator,
-    Optional,
-)
 
 
 async def is_mounted(filepath: Path) -> bool:
@@ -69,7 +66,7 @@ async def is_mounted(filepath: Path) -> bool:
 def make_tmp_dir(
     suffix: str = "",
     prefix: str = "tmp",
-    dir: Optional[str] = None,
+    dir: str | None = None,
 ) -> Generator[Path, None, None]:
     tmpdir = tempfile.mkdtemp(suffix, prefix, dir)
     atexit.register(lambda: shutil.rmtree(tmpdir, ignore_errors=True))
