@@ -14,8 +14,8 @@ let
     # Scope it to python 3.14 only since sphinx is a dependency for a lot of
     # non-python stuff and we would end-up rebuilding a LOT of packages.
     python314 = prev.python314.override {
-      packageOverrides = python-final: python-prev: {
-        astor = python-prev.astor.overridePythonAttrs (oldattrs: {
+      packageOverrides = _python-final: python-prev: {
+        astor = python-prev.astor.overridePythonAttrs (_oldattrs: {
           patches = [
             (builtins.fetchurl {
               url = "https://github.com/mgorny/astor/commit/d0b5563cc1e263f08df9312d89a7691167448f4d.patch";
@@ -24,7 +24,7 @@ let
             })
           ];
         });
-        traitlets = python-prev.traitlets.overridePythonAttrs (oldattrs: {
+        traitlets = python-prev.traitlets.overridePythonAttrs (_oldattrs: {
           patches = [
             (builtins.fetchurl {
               url = "https://github.com/ipython/traitlets/commit/d542080d1be24c95b05169b3af1754e25978c440.patch";
@@ -33,11 +33,11 @@ let
             })
           ];
         });
-        jedi = python-prev.jedi.overridePythonAttrs (oldattrs: {
+        jedi = python-prev.jedi.overridePythonAttrs (_oldattrs: {
           # https://github.com/davidhalter/jedi/issues/2064
           doCheck = false;
         });
-        pyhamcrest = python-prev.pyhamcrest.overridePythonAttrs (oldattrs: {
+        pyhamcrest = python-prev.pyhamcrest.overridePythonAttrs (_oldattrs: {
           # https://github.com/hamcrest/PyHamcrest/pull/270
           patches = [
             (builtins.fetchurl {
@@ -52,7 +52,7 @@ let
             })
           ];
         });
-        html5lib = python-prev.html5lib.overridePythonAttrs (oldattrs: {
+        html5lib = python-prev.html5lib.overridePythonAttrs (_oldattrs: {
           patches = [
             (builtins.fetchurl {
               url = "https://github.com/html5lib/html5lib-python/commit/b90dafff1bf342d34d539098013d0b9f318c7641.patch";
@@ -61,14 +61,14 @@ let
             })
           ];
         });
-        sphinx = python-prev.sphinx.overridePythonAttrs (oldattrs: {
+        sphinx = python-prev.sphinx.overridePythonAttrs (_oldattrs: {
           # they don't pass and upgrading sphinx causes other issues:
           doCheck = false;
         });
-        distutils = python-prev.distutils.overridePythonAttrs (oldattrs: {
+        distutils = python-prev.distutils.overridePythonAttrs (_oldattrs: {
           doCheck = false;
         });
-        anyio = python-prev.anyio.overridePythonAttrs (oldattrs: rec {
+        anyio = python-prev.anyio.overridePythonAttrs (_oldattrs: rec {
           version = "4.12.0";
           src = final.fetchFromGitHub {
             owner = "agronholm";
@@ -78,7 +78,7 @@ let
           };
           doCheck = false;
         });
-        twisted = python-prev.twisted.overridePythonAttrs (oldattrs: {
+        twisted = python-prev.twisted.overridePythonAttrs (_oldattrs: {
           patches = [
             (builtins.fetchurl {
               url = "https://github.com/twisted/twisted/commit/c8a4c700a71c283bd65faee69820f88ec97966cb.patch";
