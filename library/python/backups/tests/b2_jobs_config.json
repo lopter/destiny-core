@@ -1,0 +1,45 @@
+{
+  "jobsByName": {
+    "certbot_on_b2": {
+      "direction": "push",
+      "localHost": "nsrv-sfo-ashpool.kalessin.fr",
+      "localPath": "/var/lib/certbot",
+      "oneFileSystem": false,
+      "passwordPath": "/run/secrets/vars/clan-destiny-backups/certbot_on_b2-password",
+      "remoteHost": null,
+      "remotePath": null,
+      "retention": "6m",
+      "type": "restic-b2"
+    },
+    "gitolite_homedir_on_b2": {
+      "direction": "push",
+      "localHost": "nsrv-sfo-ashpool.kalessin.fr",
+      "localPath": "/stash/volumes/gitolite",
+      "oneFileSystem": false,
+      "passwordPath": "/run/secrets/vars/clan-destiny-backups/gitolite_homedir_on_b2-password",
+      "remoteHost": null,
+      "remotePath": null,
+      "retention": "12m",
+      "type": "restic-b2"
+    },
+    "vault_snapshots_on_b2": {
+      "direction": "push",
+      "localHost": "nsrv-sfo-ashpool.kalessin.fr",
+      "localPath": "/stash/volumes/vault-snapshots",
+      "oneFileSystem": false,
+      "passwordPath": "/run/secrets/vars/clan-destiny-backups/vault_snapshots_on_b2-password",
+      "remoteHost": null,
+      "remotePath": null,
+      "retention": "6m",
+      "type": "restic-b2"
+    }
+  },
+  "restic": {
+    "b2": {
+      "applicationKeyPath": "",
+      "bucket": "restic-kalessin-fr",
+      "keyIdPath": ""
+    },
+    "cacheDir": "/var/cache/restic"
+  }
+}

@@ -21,15 +21,15 @@ from clan_destiny.backups import config, utils
 )
 @click.option(
     "--dest-path",
-    type=click.Path(file_okay=False, path_type=Path),
+    type=click.Path(file_okay=False, path_type=str),
     help=(
         "Restore the backup at this directory, defaults to the source path "
         "of the backup."
     ),
 )
 @click.argument("job_name")
-def main(config_path: Path, dest_path: Path | None, job_name: str) -> None:
-    cfg = config.Config.load(config_path)
+def main(config_path: Path, dest_path: str | None, job_name: str) -> None:
+    cfg = config.load(config_path)
 
     job_cfg = cfg.jobs_by_name.get(job_name)
     if job_cfg is None:
@@ -48,7 +48,7 @@ def main(config_path: Path, dest_path: Path | None, job_name: str) -> None:
         else:
             dest_path = job_cfg.remote_path
     assert dest_path is not None
-    if not asyncio.run(utils.is_mounted(dest_path)):
+    if not asyncio.run(utils.is_mounted(Path(dest_path))):
         msg = f"The filesystem for {dest_path} must be mounted before restore"
         click.echo(msg, err=True)
         sys.exit(1)

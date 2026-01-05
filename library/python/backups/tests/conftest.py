@@ -138,8 +138,8 @@ def openbao_ssh_ca() -> Generator[config.OpenBao, None, None]:
 
             role_id_path = tmp_path / "role_id"
             secret_id_path = tmp_path / "secret_id"
-            role_id_path.write_text(role_id)
-            secret_id_path.write_text(secret_id)
+            _ = role_id_path.write_text(role_id)
+            _ = secret_id_path.write_text(secret_id)
 
             yield config.OpenBao(
                 addr=addr,
@@ -209,6 +209,6 @@ def ssh_config(
 ) -> config.SSH:
     return config.SSH(
         ca=openbao_ssh_ca,
-        public_key=ssh_identity.public_key,
-        private_key=ssh_identity.private_key,
+        public_key_path=ssh_identity.public_key,
+        private_key_path=ssh_identity.private_key,
     )

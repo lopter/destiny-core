@@ -10,14 +10,14 @@ class RsyncCommands(object):
     def __init__(
         self,
         remote_host: str,
-        local_path: Path,
-        remote_path: Path,
+        local_path: str,
+        remote_path: str,
         remote_port: int | None = None,
     ):
         self.remote: str = remote_host
-        self.local_path: Path = local_path
+        self.local_path: str = local_path
         self.remote_host: str = remote_host
-        self.remote_path: Path = remote_path
+        self.remote_path: str = remote_path
         self.remote_port: int | None = remote_port
 
     def _make_base(self, identity_files: Iterable[Path]) -> tuple[str, ...]:

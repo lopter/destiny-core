@@ -117,18 +117,18 @@ class RsyncBackupJob(BackupJob):
         tmp_dir: Path,
         name: str,
         type: config.BackupType,
-        local_path: Path,
+        local_path: str,
         remote_host: str,
-        remote_path: Path,
+        remote_path: str,
         direction: config.BackupDirection,
         ssh_config: config.SSH,
     ) -> None:
         BackupJob.__init__(self, tmp_dir, name, type)
         if type != config.BackupType.RSYNC:
             raise ValueError(f"Expected an rsync backup job but got {type}")
-        self.local_path: Path = local_path
+        self.local_path: str = local_path
         self.remote_host: str = remote_host
-        self.remote_path: Path = remote_path
+        self.remote_path: str = remote_path
         self.ssh_ca: ssh_ca.Client = ssh_ca.Client(ssh_config)
         assert ssh_config.private_key is not None
         self.private_key: Path = ssh_config.private_key
@@ -215,7 +215,7 @@ class ResticB2BackupJob(BackupJob):
         tmp_dir: Path,
         name: str,
         type: config.BackupType,
-        local_path: Path,
+        local_path: str,
         password_path: Path,
         one_file_system: bool,
         retention: str,
@@ -224,7 +224,7 @@ class ResticB2BackupJob(BackupJob):
         BackupJob.__init__(self, tmp_dir, name, type)
         bucket = restic_details.b2.bucket
         self.repository: str = f"b2:{bucket}:{name}"
-        self.local_path: Path = local_path
+        self.local_path: str = local_path
         self.password_path: Path = password_path
         self.one_file_system: bool = one_file_system
         self.retention: str = retention

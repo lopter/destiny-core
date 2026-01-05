@@ -25,7 +25,7 @@ def _get_config(ctx: click.Context) -> config.Config:
 )
 @click.pass_context
 def main(ctx: click.Context, config_path: Path) -> None:
-    ctx.obj = config.Config.load(config_path)
+    ctx.obj = config.load(config_path)
     logging.basicConfig(level=logging.INFO)
 
 

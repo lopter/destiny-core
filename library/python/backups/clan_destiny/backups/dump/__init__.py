@@ -107,7 +107,7 @@ def run(cfg: config.Config, host_fqdn: str) -> None:
             continue
 
         job_total += 1
-        if not asyncio.run(utils.is_mounted(job.local_path)):
+        if not asyncio.run(utils.is_mounted(Path(job.local_path))):
             msg = f'The filesystem associated with job "{job_name}" is not mounted'
             logger.error(msg)
             subject = "{type} backup job #{name} FAILED on {host}".format(
