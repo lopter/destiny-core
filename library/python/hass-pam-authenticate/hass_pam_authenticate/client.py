@@ -16,7 +16,7 @@ def client(ctx: click.Context) -> None:
     client = UnixStreamXMLRPCClient(str(ctx.obj.socket_path))
     response = AuthenticateResponse(*client.authenticate(username, password))
     print(f"name = {response.real_name}")
-    print(f"group = system-users")
+    print("group = system-users")
     print(f"local_only = {'true' if response.local_only else 'false'}")
     sys.exit(0 if response.ok else 1)
 
@@ -24,9 +24,7 @@ def client(ctx: click.Context) -> None:
 class UnixStreamXMLRPCClient(xmlrpc.client.ServerProxy):
     def __init__(self, addr, **kwargs):
         transport = UnixStreamTransport(addr)
-        super().__init__(
-            "http://", transport=transport, **kwargs
-        )
+        super().__init__("http://", transport=transport, **kwargs)
 
 
 class UnixStreamTransport(xmlrpc.client.Transport):

@@ -4,7 +4,6 @@ import systemd.daemon
 
 
 class UnixStreamServer(socketserver.BaseServer):
-
     def __init__(self, socket_name: str, RequestHandlerClass) -> None:
         received: list[str] = []
         for fd, name in systemd.daemon.listen_fds_with_names().items():
@@ -30,11 +29,11 @@ class UnixStreamServer(socketserver.BaseServer):
     def shutdown_request(self, request):
         """Called to shutdown and close an individual request."""
         try:
-            #explicitly shutdown.  socket.close() merely releases
-            #the socket and waits for GC to perform the actual close.
+            # explicitly shutdown. socket.close() merely releases the
+            # socket and waits for GC to perform the actual close.
             request.shutdown(socket.SHUT_WR)
         except OSError:
-            pass #some platforms may raise ENOTCONN here
+            pass  # some platforms may raise ENOTCONN here
         self.close_request(request)
 
     def close_request(self, request):

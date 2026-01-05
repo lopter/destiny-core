@@ -26,21 +26,20 @@ class UnixStreamXMLRPCRequestHandler(SimpleXMLRPCRequestHandler):
 
 
 class UnixStreamXMLRPCServer(systemd.UnixStreamServer, SimpleXMLRPCDispatcher):
-
     def __init__(
         self,
         socket_name: str,
         log_requests: bool = True,
         allow_none: bool = True,
-        encoding: str | None =None,
+        encoding: str | None = None,
         use_builtin_types: bool = True,
     ) -> None:
         self.logRequests = log_requests
-        SimpleXMLRPCDispatcher.__init__(
-            self, allow_none, encoding, use_builtin_types
-        )
+        SimpleXMLRPCDispatcher.__init__(self, allow_none, encoding, use_builtin_types)
         systemd.UnixStreamServer.__init__(
-            self, socket_name, UnixStreamXMLRPCRequestHandler,
+            self,
+            socket_name,
+            UnixStreamXMLRPCRequestHandler,
         )
 
 
