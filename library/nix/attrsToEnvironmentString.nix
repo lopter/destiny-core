@@ -1,6 +1,7 @@
 lib:
 {
   varPrefix ? "",
+  export ? false,
   attrs,
 }:
 let
@@ -15,13 +16,13 @@ let
           path = lineage ++ [ key ];
           value = lib.attrsets.attrByPath path null set;
           name = lib.strings.toUpper (builtins.concatStringsSep "_" path);
+          maybeExport = lib.optionalString export "export ";
+          maybePrefix = lib.optionalString (builtins.stringLength varPrefix > 0) "${varPrefix}_";
         in
         if builtins.isAttrs value then
           map (makePair path) (builtins.attrNames value)
-        else if builtins.stringLength varPrefix > 0 then
-          "${varPrefix}_${name}=${toString value}"
         else
-          "${name}=${toString value}";
+          "${maybeExport}${maybePrefix}${name}=${lib.escapeShellArg (toString value)}";
     in
     lib.lists.flatten (map (makePair [ ]) (builtins.attrNames set));
 in
