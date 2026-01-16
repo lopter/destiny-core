@@ -146,21 +146,21 @@
           devShells.default = pkgs.mkShell {
             name = "default";
 
-            packages =
-              [
-                config.treefmt.build.wrapper
-              ]
-              ++ (with pkgs; [
-                cfssl
-                gnused
-                shellcheck
-                sops
-                ssh-to-age
-              ])
-              ++ (with self'.packages; [
-                git-fetch-and-checkout
-                toolbelt
-              ]);
+            packages = [
+              config.treefmt.build.wrapper
+            ]
+            ++ (with pkgs; [
+              cfssl
+              gnused
+              shellcheck
+              sops
+              ssh-to-age
+              statix
+            ])
+            ++ (with self'.packages; [
+              git-fetch-and-checkout
+              toolbelt
+            ]);
           };
 
           treefmt = {
@@ -183,11 +183,10 @@
             programs.mypy.directories =
               let
                 mkConfig = package: {
-                  extraPythonPackages = package.dependencies ++ [
-                    pkgs.python3Packages.types-pyyaml
-                  ];
+                  extraPythonPackages = package.nativeBuildInputs ++ [
+                      pkgs.python3Packages.types-pyyaml
+                    ];
                   options = [
-                    "--enable-incomplete-feature=NewGenericSyntax"
                     "--explicit-package-bases"
                     "--exclude"
                     "setup.py"
