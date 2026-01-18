@@ -11,8 +11,7 @@ setuptools.setup(
     include_package_data=True,
     entry_points={
         "console_scripts": [
-            "clan-destiny-backups-dump=clan_destiny.backups.dump.__main__:main",
-            "clan-destiny-backups-restore=clan_destiny.backups.restore.__main__:main",
+            "clan-destiny-backups=clan_destiny.backups.__main__:main",
         ]
     },
 )  # pyright: ignore[reportUnusedCallResult]

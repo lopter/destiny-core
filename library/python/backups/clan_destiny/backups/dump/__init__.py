@@ -1,4 +1,5 @@
 import asyncio
+import click
 import email.mime.application
 import email.mime.multipart
 import email.mime.text
@@ -11,11 +12,50 @@ import tempfile
 
 from collections.abc import Sequence
 from pathlib import Path
+from typing import cast
 
 from clan_destiny.backups import config, utils
+
 from .job import BackupJob
 
 logger = logging.getLogger("backups.dump")
+
+
+def _get_config(ctx: click.Context) -> config.Config:
+    return cast(config.Config, ctx.obj)
+
+
+@click.group(help="Toolbelt to perform backups.")
+def dump() -> None:
+    pass
+
+
+@dump.command(name="is-mounted", help="Make sure the given path is mounted")
+@click.argument("path", type=click.Path(path_type=Path))
+@click.pass_context
+def is_mounted_command(ctx: click.Context, path: Path) -> None:
+    ctx.exit(0 if asyncio.run(utils.is_mounted(path)) else 1)
+
+
+@dump.command(
+    name="setup-debug-script",
+    help=(
+        "Given the name of a backup job setup a script "
+        "to manually debug or run a backup for it."
+    ),
+)
+@click.argument("job_name")
+@click.pass_context
+def setup_debug_script_command(ctx: click.Context, job_name: str) -> None:
+    path = setup_debug_script(_get_config(ctx), job_name, socket.getfqdn())
+    click.echo(f"A manual backup script has been written to {path}.\n")
+    click.echo("Do not forget to delete this directory once you are done.")
+
+
+@dump.command(name="run", help="Dump all backups defined for this host.")
+@click.pass_context
+def run_command(ctx: click.Context) -> None:
+    run(_get_config(ctx), socket.getfqdn())
 
 
 def _send_status_email(

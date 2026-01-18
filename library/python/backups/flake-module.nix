@@ -39,11 +39,8 @@
       backups = mkBackups pythonPkgs;
     in
     {
-      apps.backups-dump.type = "app";
-      apps.backups-dump.program = "${backups}/bin/clan-destiny-backups-dump";
-
-      apps.backups-restore.type = "app";
-      apps.backups-restore.program = "${backups}/bin/clan-destiny-backups-restore";
+      apps.backups.type = "app";
+      apps.backups.program = "${backups}/bin/clan-destiny-backups";
 
       checks = {
         rsync-dump-restore = pkgs.testers.runNixOSTest (
@@ -321,7 +318,7 @@
 
                     # Run the backup
                     siteB.succeed(
-                        "clan-destiny-backups-dump -c /etc/backups-pull.json run"
+                        "clan-destiny-backups -c /etc/backups-pull.json dump run"
                     )
 
                 with subtest("Verify pull backup data"):
@@ -378,7 +375,7 @@
 
                     # Run the backup
                     siteA.succeed(
-                        "clan-destiny-backups-dump -c /etc/backups-push.json run"
+                        "clan-destiny-backups -c /etc/backups-push.json dump run"
                     )
 
                 with subtest("Verify push backup data"):
