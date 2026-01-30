@@ -1,0 +1,19 @@
+ListenAddress 127.0.0.1
+Port $port
+
+AcceptEnv PYTHONPATH
+AllowTcpForwarding no
+ChallengeResponseAuthentication no
+ExposeAuthInfo yes
+HostKey $privateHostKeyPath
+KbdInteractiveAuthentication no
+PasswordAuthentication no
+PermitEmptyPasswords no
+PermitRootLogin no
+PidFile none
+PrintMotd no
+StrictModes yes
+TrustedUserCAKeys $trustedUserCAKeysPath
+UseDns no
+UsePAM no
+X11Forwarding no

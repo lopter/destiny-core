@@ -1,9 +1,10 @@
 import enum
 import pydantic
+import socket
 import urllib.parse
 
 from pathlib import Path
-from typing import Annotated, Any, Self, override
+from typing import Annotated, Any, NamedTuple, override, Self
 
 
 class BaseModel(pydantic.BaseModel):
@@ -134,17 +135,27 @@ class BackupJob(BaseModel):
         return self
 
 
+class ValidationContext(NamedTuple):
+    fqdn: str
+
+
 class Config(BaseModel):
     jobs_by_name: dict[str, BackupJob] = pydantic.Field(default_factory=dict)
     restic: Restic | None = None
     ssh: SSH | None = None
 
     @pydantic.model_validator(mode="after")
-    def validate_config_requirements(self) -> Self:
-        counts = self._count_jobs_by_type()
-        restic_b2_count = counts[BackupType.RESTIC_B2]
-        rsync_count = counts[BackupType.RSYNC]
+    def validate_config_requirements(
+        self,
+        info: pydantic.ValidationInfo,
+    ) -> Self:
+        assert isinstance(info.context, ValidationContext)
+        local_host = info.context.fqdn
+        counts: dict[BackupType, int] = {t: 0 for t in BackupType}
+        for job in self.jobs_by_name.values():
+            counts[job.type] += 1 if job.local_host == local_host else 0
 
+        restic_b2_count = counts[BackupType.RESTIC_B2]
         if restic_b2_count > 0 and self.restic is None:
             msg = (
                 f"{restic_b2_count} restic-b2 job(s) configured but "
@@ -152,6 +163,7 @@ class Config(BaseModel):
             )
             raise ValueError(msg)
 
+        rsync_count = counts[BackupType.RSYNC]
         if rsync_count > 0 and self.ssh is None:
             msg = (
                 f"{rsync_count} rsync job(s) configured but "
@@ -161,13 +173,7 @@ class Config(BaseModel):
 
         return self
 
-    def _count_jobs_by_type(self) -> dict[BackupType, int]:
-        """Count jobs by their backup type."""
-        counts: dict[BackupType, int] = {t: 0 for t in BackupType}
-        for job in self.jobs_by_name.values():
-            counts[job.type] += 1
-        return counts
 
-
-def load(filename: Path) -> Config:
-    return Config.model_validate_json(filename.read_text())
+def load(filename: Path, fqdn: str | None = None) -> Config:
+    context = ValidationContext(fqdn if fqdn is not None else socket.getfqdn())
+    return Config.model_validate_json(filename.read_text(), context=context)

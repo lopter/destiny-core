@@ -48,7 +48,8 @@ def valid_b2_jobs_config(tmp_path: Path) -> Path:
 
 
 def test_valid_b2_jobs(valid_b2_jobs_config: Path) -> None:
-    cfg = config.load(valid_b2_jobs_config)
+    fqdn = "nsrv-sfo-ashpool.kalessin.fr"
+    cfg = config.load(valid_b2_jobs_config, fqdn)
     assert sorted(cfg.jobs_by_name.keys()) == [
         "certbot_on_b2",
         "gitolite_homedir_on_b2",
@@ -61,4 +62,5 @@ def test_valid_b2_jobs(valid_b2_jobs_config: Path) -> None:
 def test_invalid_b2_jobs() -> None:
     with pytest.raises(pydantic.ValidationError):
         # The raw config contains paths that don't exist:
-        _ = config.load(B2_JOBS_CONFIG)
+        fqdn = "nsrv-sfo-ashpool.kalessin.fr"
+        _ = config.load(B2_JOBS_CONFIG, fqdn)

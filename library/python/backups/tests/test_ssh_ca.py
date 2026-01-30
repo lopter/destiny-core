@@ -1,14 +1,13 @@
 import subprocess
 
-from clan_destiny.backups import config, ssh_ca
+from clan_destiny.backups import ssh_ca
 
 
-def test_issue_certificate(ssh_config: config.SSH) -> None:
-    client = ssh_ca.Client(ssh_config)
+def test_issue_certificate(ssh_ca_client: ssh_ca.Client) -> None:
     key_id = "test-certificate-id"
     command = ["rsync", "--server", "--sender", "/data"]
 
-    with client.issue_cert(key_id, command) as cert_path:
+    with ssh_ca_client.issue_cert(key_id, command) as cert_path:
         result = subprocess.run(
             ["ssh-keygen", "-L", "-f", str(cert_path)],
             capture_output=True,

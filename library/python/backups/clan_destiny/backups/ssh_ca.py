@@ -4,7 +4,7 @@ import requests
 import shlex
 import tempfile
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from pathlib import Path
 from typing import override
 
@@ -38,12 +38,17 @@ class Client:
         self._mount_point: str = cfg.ca.engine_path
 
     @contextlib.contextmanager
-    def issue_cert(self, id: str, command: Sequence[str]) -> Iterator[Path]:
+    def issue_cert(
+        self,
+        id: str,
+        command: Sequence[str],
+        valid_principals: Iterable[str] = ("root",),
+    ) -> Iterator[Path]:
         response = self._vault.secrets.ssh.sign_ssh_key(
             self._signer_role,
             self._public_key.read_text(),
             ttl="1d",
-            valid_principals="root",
+            valid_principals=",".join(valid_principals),
             cert_type="user",
             key_id=id,
             # In a future iteration of this we can implement some kind of
