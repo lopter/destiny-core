@@ -399,6 +399,16 @@
           backups.nativeBuildInputs
           backups.propagatedBuildInputs
         ];
+
+        shellHook = ''
+          export GIT_ROOT="$(git rev-parse --show-toplevel)"
+          export PKG_ROOT="$GIT_ROOT/library/python/backups"
+          # Add current package to PYTHONPATH
+          export PYTHONPATH="$PKG_ROOT''${PYTHONPATH:+:$PYTHONPATH:}"
+
+          # Add clan command to PATH
+          export PATH="$PKG_ROOT/bin":"$PATH"
+        '';
       };
 
       packages.backups = backups;
