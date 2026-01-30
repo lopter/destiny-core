@@ -15,6 +15,7 @@ let
     # non-python stuff and we would end-up rebuilding a LOT of packages.
     python314 = prev.python314.override {
       packageOverrides = _python-final: python-prev: {
+        types-hvac = final.python314Packages.callPackage ./pypi/types-hvac.nix { };
         astor = python-prev.astor.overridePythonAttrs (_oldattrs: {
           patches = [
             (builtins.fetchurl {
@@ -96,9 +97,20 @@ let
       };
     };
   };
+  typesHvac = final: prev:
+    let
+      packageOverrides = _py-final: _py-prev: {
+        types-hvac = prev.python3Packages.callPackage ./pypi/types-hvac.nix { };
+      };
+    in
+    {
+      python3 = prev.python3.override { inherit packageOverrides; };
+      python3Packages = final.python3.pkgs;
+    };
 in
 [
   fakeSunPkgs
   monolightPkgs
   python314Compat
+  typesHvac
 ]
