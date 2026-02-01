@@ -131,8 +131,7 @@ def dns_set(pass_name: str, a: str, aaaa: str) -> None:
 
     to_create = []
     missing = set(itertools.product(("A", "AAAA"), ("", "www"))) - existing
-    for record in missing:
-        field_type, target = record
+    for field_type, target in missing:
         to_create.append({
             "fieldType": field_type,
             "subDomain": target,
@@ -235,7 +234,7 @@ def process_image(output_dir: Path, thumbnail_size: int, image_path: Path) -> Ma
         lower_right = (mid_x + half_square_size, mid_y + half_square_size)
         thumbnail = source.crop(box=(*upper_left, *lower_right))
         thumbnail = thumbnail.resize((thumbnail_size, thumbnail_size))
-        opts = {}
+        opts: dict[str, Any] = {}
         if source.format == "JPEG":
             opts.update(quality=90, optimize=True)
         else:
