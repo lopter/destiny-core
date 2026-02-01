@@ -1,6 +1,6 @@
 from . import (
     clan,
     pass_store,
-    s3cmd,
+    s3,
     tailscale,
 )

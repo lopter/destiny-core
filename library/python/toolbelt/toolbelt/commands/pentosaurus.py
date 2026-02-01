@@ -11,9 +11,9 @@ import shutil
 import sys
 import yaml
 
-from collections.abc import Generator
+from collections.abc import Generator, Iterator
 from pathlib import Path
-from typing import Any, Final, Iterator, cast, NamedTuple
+from typing import Any, Final, cast, NamedTuple
 
 from . import utils
 
@@ -296,6 +296,12 @@ s3_pass_name_option = click.option(
     default=BUCKET_NAME,
     show_default=True,
 )
+@click.option(
+    "--dry-run/--no-dry-run",
+    default=True,
+    show_default=True,
+    help="Show what would be synced without actually syncing",
+)
 @s3_pass_name_option
 @click.pass_context
 def upload(
@@ -303,6 +309,7 @@ def upload(
     local_dir: Path,
     remote_dir: str,
     bucket: str,
+    dry_run: bool,
     pass_name: str,
 ) -> None:
     if (s3_config := get_s3_config(pass_name)) is None:
@@ -325,9 +332,10 @@ def upload(
         local_dir.rename(want_dir)
         local_dir = want_dir
 
-    utils.s3cmd.sync(s3_config, local_dir, bucket, remote_prefix)
+    utils.s3.sync(s3_config, local_dir, bucket, remote_prefix, dry_run)
 
-    click.echo(f"""{local_dir} has been uploaded.
+    if not dry_run:
+        click.echo(f"""{local_dir} has been uploaded.
 
 Don't forget to set CORS rules on {bucket} if it has not been done:
 
@@ -349,29 +357,37 @@ Don't forget to set CORS rules on {bucket} if it has not been done:
     default=BUCKET_NAME,
     show_default=True,
 )
+@click.option(
+    "--dry-run/--no-dry-run",
+    default=True,
+    show_default=True,
+    help="Show what would be deleted without actually deleting",
+)
 @s3_pass_name_option
 @click.pass_context
 def delete(
     ctx: click.Context,
     remote_path: str,
     bucket: str,
+    dry_run: bool,
     pass_name: str,
 ) -> None:
     if (s3_config := get_s3_config(pass_name)) is None:
         ctx.exit(1)
 
-    if click.confirm(f"Recursively delete {remote_path} from {bucket}?"):
-        utils.s3cmd.delete(s3_config, bucket, remote_path)
+    prompt = f"Recursively delete {remote_path} from {bucket}?"
+    if dry_run or click.confirm(prompt):
+        utils.s3.delete(s3_config, bucket, remote_path, dry_run)
 
 
-def get_s3_config(pass_name: str) -> utils.s3cmd.Config | None:
+def get_s3_config(pass_name: str) -> utils.s3.Config | None:
     pass_contents = utils.pass_store.show(pass_name)
     match credentials := yaml.safe_load(pass_contents):
         case {
             "AWS_ACCESS_KEY_ID": access_key,
             "AWS_SECRET_ACCESS_KEY": secret_key,
         }:
-            return utils.s3cmd.Config(access_key, secret_key, BUCKET_HOST_BASE)
+            return utils.s3.Config(access_key, secret_key, BUCKET_HOST_BASE)
         case _:
             if not isinstance(credentials, dict):
                 logger.info(f"Expected to find a dict in pass but got a {type(credentials)}")

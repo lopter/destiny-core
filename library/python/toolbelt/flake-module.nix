@@ -6,20 +6,24 @@
         pname = "clan-destiny";
         src = ./.;
         version = "1.0.0-rc.1";
-        doCheck = false;
         pyproject = true;
 
         build-system = with pkgs.python3Packages; [
           setuptools
-          setuptools-scm
         ];
 
         dependencies = with pkgs.python3Packages; [
+          boto3
           click
           ovh
           pexpect
           pillow
           pyyaml
+        ];
+
+        nativeCheckInputs = [
+          pkgs.python3Packages.boto3-stubs
+          pkgs.python3Packages.types-pyyaml
         ];
 
         propagatedBuildInputs = with pkgs; [
@@ -32,8 +36,6 @@
           inputs'.clan-core.packages.clan-cli
 
           pass
-
-          s3cmd
         ];
       };
     in
