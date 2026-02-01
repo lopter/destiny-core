@@ -149,8 +149,15 @@ class Config(BaseModel):
         self,
         info: pydantic.ValidationInfo,
     ) -> Self:
-        assert isinstance(info.context, ValidationContext)
-        local_host = info.context.fqdn
+        if isinstance(info.context, ValidationContext):
+            local_host = info.context.fqdn
+        else:
+            # You can't really pass a validation context when you directly
+            # instantiate the model (which is useful in tests), so default
+            # to `socket.getfqdn()` in that case.
+            reason = f"Expected ValidationContext got: {type(info.context)}"
+            assert info.context is None, reason
+            local_host = socket.getfqdn()
         counts: dict[BackupType, int] = {t: 0 for t in BackupType}
         for job in self.jobs_by_name.values():
             counts[job.type] += 1 if job.local_host == local_host else 0

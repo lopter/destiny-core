@@ -1,5 +1,5 @@
-import os
 import pytest
+import socket
 
 from pathlib import Path
 
@@ -13,7 +13,7 @@ def test_config(tmp_path: Path, ssh_config: config.SSH) -> Path:
             "test_job": config.BackupJob(
                 type=config.BackupType.RSYNC,
                 direction=config.BackupDirection.PUSH,
-                local_host="lady-3jane.kalessin.fr",
+                local_host=socket.getfqdn(),
                 local_path="/var/empty",
                 remote_host="nsrv-sfo-ashpool.kalessin.fr",
                 remote_path="/stash/backups/empty",
@@ -54,4 +54,3 @@ def test_sshd_agent(
             "-o", "SendEnv=PYTHONPATH",
             f"{test_username}@localhost",
         ]))
-        breakpoint()
