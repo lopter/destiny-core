@@ -44,8 +44,18 @@
       devShells.toolbelt = pkgs.mkShell {
         propagatedBuildInputs = [
           pkgs.python3Packages.ipython
-          toolbelt
+          pkgs.python3Packages.mypy
+
+          toolbelt.nativeBuildInputs
+          toolbelt.propagatedBuildInputs
         ];
+
+        shellHook = ''
+          export GIT_ROOT="$(git rev-parse --show-toplevel)"
+          export PKG_ROOT="$GIT_ROOT/library/python/toolbelt"
+          export PYTHONPATH="$PKG_ROOT''${PYTHONPATH:+:$PYTHONPATH:}"
+          export PATH="$PKG_ROOT/bin":"$PATH"
+        '';
       };
     };
 }
