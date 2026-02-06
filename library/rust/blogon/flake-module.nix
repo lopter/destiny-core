@@ -40,6 +40,7 @@
             cargo-leptos
             dart-sass
             makeWrapper
+            wasm-bindgen-cli
           ];
           doCheck = false;
           doNotPostBuildInstallCargoBinaries = true;
