@@ -2,13 +2,14 @@
   description = "The code library supporting a Nix'ed homelab";
 
   inputs = {
-    clan-core.url = "git+https://git.clan.lol/lopter/clan-core?ref=lo-vars-recall-prompts&shallow=1";
+    clan-core.url = "git+https://git.clan.lol/clan/clan-core?ref=main&shallow=1";
+    # clan-core.url = "git+https://git.clan.lol/lopter/clan-core?ref=lo-vars-recall-prompts&shallow=1";
     # clan-core.url = "git+file:///stash/home/kal/cu/src/nix/clan-core/lo-rebase";
     clan-core.inputs.nixpkgs.follows = "nixpkgs";
     clan-core.inputs.flake-parts.follows = "flake-parts";
     clan-core.inputs.treefmt-nix.follows = "treefmt-nix";
 
-    flake-parts.url = "github:hercules-ci/flake-parts";
+   flake-parts.url = "github:hercules-ci/flake-parts";
     flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs";
 
     nixpkgs.url = "git+https://github.com/lopter/nixpkgs?ref=nixos-unstable-lo-patches&shallow=1";
@@ -166,7 +167,6 @@
 
             programs.mypy.enable = true;
             programs.nixfmt.enable = true;
-            programs.nixfmt.package = pkgs.nixfmt-rfc-style;
             programs.deadnix.enable = true;
             settings.global.excludes = [
               "*.png"
