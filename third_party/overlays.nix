@@ -79,21 +79,6 @@ let
           };
           doCheck = false;
         });
-        twisted = python-prev.twisted.overridePythonAttrs (_oldattrs: {
-          patches = [
-            (builtins.fetchurl {
-              url = "https://github.com/twisted/twisted/commit/c8a4c700a71c283bd65faee69820f88ec97966cb.patch";
-              name = "twisted-python314-compat-1.patch";
-              sha256 = "0llq0q08bc8mgdvya31w7x9h7dhm0lb7i8alrhv4gllpq8l4kvlx";
-            })
-            (builtins.fetchurl {
-              url = "https://github.com/twisted/twisted/commit/69b81f9038eea5ef60c30a3460abb4cc26986f72.patch";
-              name = "twisted-python314-compat-2.patch";
-              sha256 = "1zj6gy02lbm4g0sz32whjp1y1wx0jqpd2g4bnnhf8glfaq61wrnd";
-            })
-            ./twisted_web_client.patch
-          ];
-        });
       };
     };
   };

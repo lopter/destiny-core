@@ -9,11 +9,11 @@
     clan-core.inputs.flake-parts.follows = "flake-parts";
     clan-core.inputs.treefmt-nix.follows = "treefmt-nix";
 
-   flake-parts.url = "github:hercules-ci/flake-parts";
+    flake-parts.url = "github:hercules-ci/flake-parts";
     flake-parts.inputs.nixpkgs-lib.follows = "nixpkgs";
 
     nixpkgs.url = "git+https://github.com/lopter/nixpkgs?ref=nixos-unstable-lo-patches&shallow=1";
-    # nixpkgs.url = "/stash/home/kal/cu/src/nix/nixpkgs";
+    # nixpkgs.url = "git+file:///stash/home/kal/cu/src/nix/nixpkgs/nixos-unstable-lo-patches?ref=nixos-unstable-lo-patches&shallow=1";
 
     nixpkgs-unfree.url = "github:numtide/nixpkgs-unfree";
     nixpkgs-unfree.inputs.nixpkgs.follows = "nixpkgs";
